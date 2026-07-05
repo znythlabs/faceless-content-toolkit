@@ -694,6 +694,7 @@ const server = http.createServer(async (req, res) => {
       const imageTool = body.imageTool || 'generic';
       const videoTool = body.videoTool || 'generic';
       const length = body.length || '30-40 seconds';
+      const schema = body.schema || 'generic';
 
       let attempt = 0;
       const maxAttempts = 3;
@@ -737,6 +738,12 @@ const server = http.createServer(async (req, res) => {
 
           rawText = result.content[0].text;
           parsedPkg = robustParseJSON(rawText);
+          if (schema === 'wildlife') {
+            // Wildlife schema — skip generic validation/scoring; generator has own QA
+            console.error(`[faceless-content-router] Wildlife package parsed successfully on attempt ${attempt}`);
+            ok = true;
+            break;
+          }
 
           const qaErrors = validateVideoPackage(parsedPkg, imageTool, videoTool, length);
           if (qaErrors.length > 0) {
@@ -752,7 +759,6 @@ const server = http.createServer(async (req, res) => {
             ok = true;
             break;
           }
-
           lastErrorMsg = qa.flags.map(f => `- ${f}`).join('\n') || '- Overall quality score below target; strengthen weak categories.';
         } catch (err) {
           triedProviders.add(activeProviderId);
@@ -783,6 +789,12 @@ const server = http.createServer(async (req, res) => {
           error: `Content generation failed after ${attempt} attempt(s) via provider(s): ${triedList}.`,
           details: lastErrorMsg
         });
+        return;
+      }
+
+      if (schema === 'wildlife') {
+        // Wildlife: return raw text as-is; generator handles its own parsing/scoring
+        sendJson(res, 200, result);
         return;
       }
 

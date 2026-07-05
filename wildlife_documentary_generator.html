@@ -342,6 +342,7 @@ async function generate() {
       body: JSON.stringify({
         provider: val('provider'),
         max_tokens: 5500,
+        schema: 'wildlife',
         system: systemPrompt({ visualStyle: val('visualStyle'), imageTool: val('imageTool'), videoTool: val('videoTool') }),
         messages: [{ role: 'user', content: userMessage() }],
         imageTool: val('imageTool'),
