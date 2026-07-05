@@ -543,8 +543,8 @@ const server = http.createServer(async (req, res) => {
       return;
     }
     const url = new URL(req.url, `http://${HOST}:${PORT}`);
-    if (req.method === 'GET' && url.pathname === '/') {
-      const htmlPath = resolve(process.cwd(), 'faceless_content_generator.html');
+    if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/wildlife')) {
+      const htmlPath = resolve(process.cwd(), 'wildlife_documentary_generator.html');
       if (existsSync(htmlPath)) {
         const html = readFileSync(htmlPath, 'utf8');
         res.writeHead(200, corsHeaders({ 'Content-Type': 'text/html; charset=utf-8' }));
@@ -558,6 +558,17 @@ const server = http.createServer(async (req, res) => {
         health: `http://${HOST}:${PORT}/health`,
         configuredProviders: configuredProviderIds(),
       });
+      return;
+    }
+    if (req.method === 'GET' && url.pathname === '/legacy') {
+      const htmlPath = resolve(process.cwd(), 'faceless_content_generator.html');
+      if (existsSync(htmlPath)) {
+        const html = readFileSync(htmlPath, 'utf8');
+        res.writeHead(200, corsHeaders({ 'Content-Type': 'text/html; charset=utf-8' }));
+        res.end(html);
+        return;
+      }
+      sendJson(res, 404, { error: 'Legacy generator not found.' });
       return;
     }
     if (req.method === 'GET' && url.pathname === '/health') {
