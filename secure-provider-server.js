@@ -606,6 +606,7 @@ const server = http.createServer(async (req, res) => {
       const imageTool = body.imageTool || 'generic';
       const videoTool = body.videoTool || 'generic';
       const length = body.length || '30-40 seconds';
+      const schema = body.schema || 'generic';
 
       try {
         const provider = pickProvider(requestedProvider);
@@ -637,10 +638,11 @@ const server = http.createServer(async (req, res) => {
             res.end();
             return;
           }
-
           // Score but never reject — browser handles retry decisions
-          const qa = scoreVideoPackage(parsedPkg, imageTool, videoTool, length);
-          parsedPkg.qa = qa;
+          if (schema !== 'wildlife') {
+            const qa = scoreVideoPackage(parsedPkg, imageTool, videoTool, length);
+            parsedPkg.qa = qa;
+          }
           sendSSE('result', { content: parsedPkg });
         } else {
           // Non-streaming fallback for other provider types
@@ -667,10 +669,11 @@ const server = http.createServer(async (req, res) => {
             res.end();
             return;
           }
-
           // Score but never reject — browser handles retry decisions
-          const qa = scoreVideoPackage(parsedPkg, imageTool, videoTool, length);
-          parsedPkg.qa = qa;
+          if (schema !== 'wildlife') {
+            const qa = scoreVideoPackage(parsedPkg, imageTool, videoTool, length);
+            parsedPkg.qa = qa;
+          }
           sendSSE('result', { content: parsedPkg });
         }
       } catch (err) {
@@ -724,7 +727,7 @@ const server = http.createServer(async (req, res) => {
         console.error(`[faceless-content-router] Generation attempt ${attempt}/${maxAttempts} (provider: ${activeProviderId})...`);
 
         let activeSystemPrompt = body.system;
-        if (attempt > 1) {
+        if (attempt > 1 && lastErrorMsg && !lastErrorMsg.startsWith('- Generation or JSON parsing failed') && !lastErrorMsg.startsWith('- Previous provider failed')) {
           activeSystemPrompt = `${body.system}\n\nIMPORTANT: Your previous response needs correction:\n${lastErrorMsg}\n\nFix these specific issues, keep scene numbers aligned 1:1, and return ONLY a valid, parseable JSON block matching the requested schema.`;
         }
 
