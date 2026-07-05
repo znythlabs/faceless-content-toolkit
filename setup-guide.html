@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Setup Guide — Faceless Content Toolkit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0A0B0D;
+    --bg-glow: radial-gradient(1200px 480px at 50% -10%, rgba(255,138,61,0.10), transparent 60%);
+    --panel: #131519;
+    --panel-deep: #0E1013;
+    --line: #24272E;
+    --line-soft: #1A1C21;
+    --ink: #EDEEF0;
+    --muted: #8B909C;
+    --muted-dim: #565A63;
+    --accent: #FF8A3D;
+    --accent-dim: #2E2013;
+    --accent-line: #6B4626;
+    --ok: #5FE3A6;
+    --ok-dim: #142A22;
+    --ok-line: #2A5A45;
+  }
+  *{box-sizing:border-box;}
+  ::selection{background:var(--accent); color:#0A0B0D;}
+  body{
+    margin:0; background:var(--bg) var(--bg-glow); color:var(--ink);
+    font-family:'Inter', -apple-system, sans-serif;
+    line-height:1.65; -webkit-font-smoothing:antialiased;
+  }
+  .page{max-width:800px; margin:0 auto; padding:72px 32px 110px;}
+
+  /* --- Header / slate --- */
+  .tally{
+    display:inline-flex; align-items:center; gap:9px;
+    font-family:'JetBrains Mono', monospace; text-transform:uppercase; letter-spacing:.18em;
+    font-size:11.5px; color:var(--accent); margin-bottom:22px;
+  }
+  .tally .dot{
+    width:7px; height:7px; border-radius:50%; background:var(--accent);
+    box-shadow:0 0 0 3px var(--accent-dim), 0 0 14px rgba(255,138,61,.55);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.45;} }
+
+  h1{
+    font-family:'Space Grotesk', sans-serif; font-weight:600;
+    font-size:42px; line-height:1.12; margin:0 0 14px; letter-spacing:-0.015em;
+    color:#FFFFFF;
+  }
+  .dek{color:var(--muted); font-size:17px; max-width:600px; margin-bottom:6px;}
+
+  .timecode{
+    display:flex; gap:0; margin:36px 0 40px; border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line); font-family:'JetBrains Mono', monospace;
+  }
+  .timecode .chip{
+    flex:1; padding:14px 18px; border-right:1px solid var(--line); font-size:12px;
+  }
+  .timecode .chip:last-child{border-right:none;}
+  .timecode .chip .k{color:var(--muted-dim); text-transform:uppercase; letter-spacing:.1em; font-size:10px; display:block; margin-bottom:5px;}
+  .timecode .chip .v{color:var(--ink); font-size:13.5px;}
+
+  /* --- Callouts --- */
+  .callout{
+    background:var(--accent-dim); border:1px solid var(--accent-line); border-left:3px solid var(--accent);
+    padding:16px 20px; border-radius:6px; margin:26px 0; font-size:15px; color:#E9DACB;
+  }
+  .callout b{color:var(--accent); font-weight:600;}
+  .callout.ok{background:var(--ok-dim); border-color:var(--ok-line); border-left-color:var(--ok); color:#CDEDE0;}
+  .callout.ok b{color:var(--ok);}
+
+  /* --- Section headers --- */
+  h2{
+    font-family:'JetBrains Mono', monospace; text-transform:uppercase; letter-spacing:.12em;
+    font-size:13px; color:var(--ink); margin:64px 0 8px; font-weight:600;
+    display:flex; align-items:center; gap:14px;
+  }
+  h2 .num{
+    color:var(--accent); font-weight:600; flex-shrink:0;
+    border:1px solid var(--accent-line); border-radius:4px; padding:3px 8px;
+    background:var(--accent-dim); font-size:12px;
+  }
+  h2::after{
+    content:''; flex:1; height:1px; background:var(--line);
+  }
+  h2 + p{margin-top:16px;}
+
+  h3{
+    font-family:'Space Grotesk', sans-serif; font-weight:600;
+    font-size:16.5px; color:#F2F3F5; margin:34px 0 10px; letter-spacing:-.005em;
+  }
+
+  p{font-size:15.5px; margin:14px 0; color:#C7CAD1;}
+  a{color:var(--accent);}
+  code{
+    font-family:'JetBrains Mono', monospace; background:var(--panel); color:#FFB27A;
+    padding:2px 7px; border-radius:4px; font-size:13.5px; border:1px solid var(--line-soft);
+  }
+
+  pre{
+    background:var(--panel-deep); color:#D8DAE0; border:1px solid var(--line); border-radius:8px;
+    padding:18px 20px; overflow-x:auto; font-size:13px; line-height:1.6;
+    font-family:'JetBrains Mono', monospace; margin:14px 0;
+  }
+  pre .cmt{color:var(--muted-dim);}
+  .filelabel{
+    font-family:'JetBrains Mono', monospace; font-size:10.5px; color:var(--muted-dim);
+    text-transform:uppercase; letter-spacing:.1em; margin:20px 0 -4px;
+  }
+
+  ul, ol{padding-left:22px;}
+  li{font-size:15.5px; margin:7px 0; color:#C7CAD1;}
+  li::marker{color:var(--accent);}
+
+  .check{
+    display:flex; gap:12px; align-items:flex-start; margin:12px 0; font-size:15px;
+  }
+  .check .box{
+    flex-shrink:0; width:16px; height:16px; margin-top:3px;
+    border:1.5px solid var(--accent-line); border-radius:4px; background:var(--panel);
+  }
+  .check b{color:var(--ink);}
+
+  table{width:100%; border-collapse:collapse; margin:18px 0; font-size:14px;}
+  th, td{text-align:left; padding:11px 14px; border-bottom:1px solid var(--line); vertical-align:top; color:#C7CAD1;}
+  th{
+    font-family:'JetBrains Mono', monospace; font-size:10.5px; text-transform:uppercase;
+    letter-spacing:.08em; color:var(--muted-dim); font-weight:500;
+  }
+  td code{color:var(--accent);}
+  td b{color:var(--ink);}
+
+  .quote-ex{
+    font-family:'JetBrains Mono', monospace; font-size:14px; color:#B9E8CE;
+    background:var(--panel-deep); border:1px solid var(--line); border-left:2px solid var(--ok);
+    padding:10px 16px; margin:10px 0; border-radius:6px;
+  }
+  .quote-ex::before{content:'> '; color:var(--muted-dim);}
+
+  .filetree{
+    font-family:'JetBrains Mono', monospace; font-size:13px; background:var(--panel-deep);
+    color:#B7BBC4; border:1px solid var(--line); border-radius:8px; padding:20px 22px; margin:18px 0;
+    line-height:1.85;
+  }
+  .filetree .name{color:var(--accent);}
+  .filetree .desc{color:var(--muted-dim);}
+
+  .pathpick{
+    display:flex; gap:16px; margin:26px 0; flex-wrap:wrap;
+  }
+  .pathcard{
+    flex:1; min-width:230px; border:1px solid var(--line); border-radius:10px;
+    padding:20px 22px; background:var(--panel);
+  }
+  .pathcard .tag{
+    font-family:'JetBrains Mono', monospace; font-size:10.5px; text-transform:uppercase;
+    letter-spacing:.1em; color:var(--accent); margin-bottom:10px; display:block;
+  }
+  .pathcard h4{margin:0 0 8px; font-size:17px; font-weight:600; font-family:'Space Grotesk', sans-serif; color:#F2F3F5;}
+  .pathcard p{margin:0; font-size:14px; color:var(--muted);}
+  .pathcard b{color:var(--ink);}
+
+  .divider{
+    text-align:center; color:var(--line-soft); margin:60px 0;
+    font-family:'JetBrains Mono', monospace; letter-spacing:.5em; font-size:13px;
+  }
+
+  footer{
+    margin-top:72px; padding-top:22px; border-top:1px solid var(--line);
+    color:var(--muted-dim); font-size:12px; font-family:'JetBrains Mono', monospace;
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;
+  }
+
+  @media (max-width:600px){
+    .page{padding:48px 20px 90px;}
+    h1{font-size:32px;}
+    .pathpick{flex-direction:column;}
+    .timecode{flex-direction:column;}
+    .timecode .chip{border-right:none; border-bottom:1px solid var(--line);}
+    .timecode .chip:last-child{border-bottom:none;}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="tally"><span class="dot"></span>Setup Guide · Faceless Content Toolkit</div>
+  <h1>Getting the Toolkit Running</h1>
+  <div class="dek">Everything in <code>faceless-content-toolkit.zip</code>, what each file does, and the shortest path to using it — whether that's opening a page in your browser or wiring it into an agent like Hermes or omp.</div>
+
+  <div class="timecode">
+    <div class="chip"><span class="k">Browser tool</span><span class="v">&lt; 1 minute, free</span></div>
+    <div class="chip"><span class="k">Agent (MCP) setup</span><span class="v">~10 minutes</span></div>
+    <div class="chip"><span class="k">Requires for MCP</span><span class="v">Node.js, npm</span></div>
+  </div>
+
+  <h2><span class="num">01</span> What's in the zip</h2>
+  <p>Core files plus the secure local router, with two independent ways to use the same generator. You only need to set up the one(s) you actually want.</p>
+  <div class="filetree">
+faceless-content-toolkit/
+├── <span class="name">faceless_content_generator.html</span>  <span class="desc">— open in a browser, fill a form, get results on screen</span>
+├── <span class="name">secure-provider-server.js</span>        <span class="desc">— local provider router; keeps API keys out of the browser</span>
+├── <span class="name">.env.example</span>                    <span class="desc">— provider presets for OpenCode Zen/Go, Neuralwatt, OpenAI, Anthropic, Codex OAuth</span>
+├── <span class="name">index.js</span>                         <span class="desc">— the same generator as an MCP tool; follows your agent's model by default</span>
+├── <span class="name">package.json</span>                     <span class="desc">— dependency list and start scripts</span>
+├── <span class="name">setup-guide.html</span>                 <span class="desc">— this file</span>
+└── <span class="name">README.md</span>                        <span class="desc">— condensed reference version of this guide</span>
+  </div>
+
+  <h2><span class="num">02</span> Pick your path</h2>
+  <div class="pathpick">
+    <div class="pathcard">
+      <span class="tag">Path A</span>
+      <h4>Just use it now — free</h4>
+      <p>Paste <code>faceless_content_generator.html</code> into a Claude.ai chat and use it as an artifact. No install, no API key, works on Free. Go to <b>§03</b>.</p>
+    </div>
+    <div class="pathcard">
+      <span class="tag">Path B</span>
+      <h4>Let my agent call it</h4>
+      <p>Wire <code>index.js</code> into Hermes, omp, or another MCP client so it's called automatically. Go to <b>§04</b>.</p>
+    </div>
+  </div>
+  <p>The two paths don't depend on each other — set up one, both, or switch later. Same prompt logic, same output schema either way.</p>
+
+  <div class="divider">· · ·</div>
+
+  <h2><span class="num">03</span> Path A — the browser tool</h2>
+  <p><code>faceless_content_generator.html</code> works two different ways depending on where you open it, and it detects which one automatically:</p>
+  <table>
+    <tr><th>Where you open it</th><th>What happens</th><th>Cost</th></tr>
+    <tr><td>Pasted into a Claude.ai chat and turned into an artifact</td><td>Works immediately, no router needed</td><td><b>Free</b> — covered by any Claude.ai plan, including Free</td></tr>
+    <tr><td>Downloaded and double-clicked (any browser, no Claude account)</td><td>Uses the secure local provider router at <code>127.0.0.1</code></td><td>Depends on the provider/key you choose</td></tr>
+  </table>
+
+  <h3>If you want the free route — run it as a Claude.ai artifact</h3>
+  <p>This is the option that needs no API key and costs nothing beyond your existing Claude.ai usage, on any plan including Free.</p>
+  <ol>
+    <li>Open <code>faceless_content_generator.html</code> in a text editor (or upload the file straight into a Claude.ai chat).</li>
+    <li>Start a new chat on <a href="https://claude.ai" target="_blank">claude.ai</a> and paste in the full file contents (or attach the file itself), then ask: <span class="quote-ex">Turn this into an artifact I can use.</span></li>
+    <li>Claude renders it as a live artifact in the side panel — the form, the generate button, all of it, running in that panel.</li>
+    <li>Fill in the niche/topic, length, tone, and visual style, then click <b>Generate Video Package</b> — no key bar appears, because the artifact detects it's inside Claude and the API call is proxied through your session automatically.</li>
+  </ol>
+  <div class="callout ok">
+    <b>Why this one's free:</b> Anthropic proxies API calls made from inside an artifact using whichever account is currently viewing it — at no extra cost, on any Claude.ai plan. That proxy only exists inside claude.ai/Desktop; it's not available once the file leaves that environment.
+  </div>
+  <div class="callout">
+    <b>Good to know:</b> the artifact lives in that one conversation. If you want it handy again later, keep the chat around, or re-paste the file into a fresh chat any time — the code itself never changes.
+  </div>
+
+  <h3>If you're running it standalone securely</h3>
+  <ol>
+    <li>Copy <code>.env.example</code> to <code>.env</code>.</li>
+    <li>Add the provider key you want, such as <code>OPENCODE_GO_API_KEY</code>, <code>OPENCODE_ZEN_API_KEY</code>, <code>NEURALWATT_API_KEY</code>, <code>OPENAI_API_KEY</code>, or <code>ANTHROPIC_API_KEY</code>.</li>
+    <li>Start the router with <code>node secure-provider-server.js</code> or <code>npm run start:router</code>.</li>
+    <li>Double-click <code>faceless_content_generator.html</code>, pick the provider preset, keep the router URL as <code>http://127.0.0.1:3737</code>, then click <b>Check</b>.</li>
+    <li>Fill in the niche/topic, length, tone, and visual style, then click <b>Generate Video Package</b>.</li>
+  </ol>
+  <div class="callout ok">
+    <b>Standalone security note:</b> API keys stay in <code>.env</code> on your machine. The browser only sends prompts and provider IDs to the local router; it does not store or transmit API keys.
+  </div>
+
+  <h3>Recent Generations</h3>
+  <p>Every successful generation is saved automatically and listed under "Recent Generations" — click any entry to reload that full package. Inside Claude it's saved to Claude's built-in storage; standalone it's saved to that browser's local storage, so history doesn't follow you between browsers or devices.</p>
+
+  <div class="divider">· · ·</div>
+
+  <h2><span class="num">04</span> Path B — wire it into your agent (MCP)</h2>
+  <p>This runs <code>index.js</code> as a small local process your agent starts on its own and talks to over MCP — no browser tab involved.</p>
+
+  <h3>1. Unzip somewhere permanent</h3>
+  <div class="filelabel">Terminal</div>
+  <pre>mkdir -p ~/tools
+unzip faceless-content-toolkit.zip -d ~/tools/faceless-content-toolkit</pre>
+
+  <h3>2. Install the one dependency</h3>
+  <pre>cd ~/tools/faceless-content-toolkit
+npm install</pre>
+
+  <h3>3. API key — usually skip this</h3>
+  <p><code>index.js</code> uses <b>MCP sampling</b> by default: instead of calling the Anthropic API itself, it asks your <i>connected agent</i> to run the completion on whatever model that agent is currently using. That means no API key, no separate billing, and the tool automatically follows your agent if you switch its model later. This works in any client that supports sampling — Claude Desktop and Hermes both do.</p>
+  <p>A fallback is only needed for clients that do not support sampling. The preferred fallback is the secure provider router: start <code>secure-provider-server.js</code> and set <code>FCT_ROUTER_URL=http://127.0.0.1:3737</code> in the MCP server env. The older <code>ANTHROPIC_API_KEY</code> fallback still works, but the router is more flexible and keeps all provider presets in one place.</p>
+
+  <h3>4. (Optional) test it runs before wiring it up</h3>
+  <pre>node index.js</pre>
+  <p>It should print <code>[faceless-content-mcp] Server running on stdio. Sampling-first mode;</code> and then sit there waiting — that's correct, it's speaking MCP over stdio and expects a client, not a human typing into it. <code>Ctrl+C</code> to stop.</p>
+
+  <h3>5. Point your agent's config at it</h3>
+  <p>Hermes and omp use the same idea: a config file listing MCP servers by name, each with a <code>command</code> to run. Start with no <code>env</code> block if your client supports sampling. Add <code>FCT_ROUTER_URL</code> if you want the secure provider router as fallback or direct mode.</p>
+
+  <div class="filelabel">Hermes — ~/.hermes/config.yaml</div>
+  <pre>mcp_servers:
+  faceless_content:
+    command: "node"
+    args: ["/Users/you/tools/faceless-content-toolkit/index.js"]</pre>
+
+  <div class="filelabel">omp — ~/.omp/agent/mcp.json</div>
+  <pre>{
+  "mcpServers": {
+    "faceless_content": {
+      "command": "node",
+      "args": ["/Users/you/tools/faceless-content-toolkit/index.js"]
+    }
+  }
+}</pre>
+
+  <div class="filelabel">Claude Desktop — ~/Library/Application Support/Claude/claude_desktop_config.json (macOS) or %APPDATA%\Claude\claude_desktop_config.json (Windows)</div>
+  <pre>{
+  "mcpServers": {
+    "faceless_content": {
+      "command": "node",
+      "args": ["/Users/you/tools/faceless-content-toolkit/index.js"]
+    }
+  }
+}</pre>
+
+  <div class="filelabel">If your client needs fallback or you want direct provider routing</div>
+  <pre>{
+  "mcpServers": {
+    "faceless_content": {
+      "command": "node",
+      "args": ["/Users/you/tools/faceless-content-toolkit/index.js"],
+      "env": { "FCT_ROUTER_URL": "http://127.0.0.1:3737" }
+    }
+  }
+}</pre>
+  <p>Same shape works for Hermes' YAML — add <code>FCT_ROUTER_URL: "http://127.0.0.1:3737"</code> under the server entry. Start <code>secure-provider-server.js</code> before running the agent.</p>
+
+  <div class="callout">
+    <b>Use the absolute path.</b> Write out <code>/Users/you/tools/...</code> in full — some agents don't expand <code>~</code> inside JSON/YAML config files, and a wrong path is the most common reason a server fails to register.
+  </div>
+  <div class="callout ok">
+    <b>Which clients support sampling?</b> Claude Desktop and Hermes both do, so both run this tool key-free by default. If a client doesn't support sampling, every call can fail over to the secure router when <code>FCT_ROUTER_URL</code> is set (and tells you so in its output) — it doesn't just error out.
+  </div>
+
+  <h3>6. Restart your agent</h3>
+  <p>Hermes, omp, and Claude Desktop all discover MCP servers at startup. Restart the agent (Hermes can also auto-reload on config save, but a restart is the safest bet the first time).</p>
+
+  <h3>7. Verify it registered</h3>
+  <table>
+    <tr><th>Agent</th><th>Where to check</th></tr>
+    <tr><td>Hermes</td><td>Tool list — look for <code>mcp_faceless_content_generate_faceless_content</code></td></tr>
+    <tr><td>omp</td><td>Tool list — look for <code>mcp__faceless_content_generate_faceless_content</code></td></tr>
+    <tr><td>Claude Desktop</td><td>Hammer icon in the chat input box — click it to see the tool listed</td></tr>
+  </table>
+  <p>If it's missing, check the agent's logs for a startup error from that server — usually a wrong path, a missing <code>npm install</code>, or a router/provider configuration issue.</p>
+
+  <div class="divider">· · ·</div>
+
+  <h2><span class="num">05</span> Using it once it's set up</h2>
+  <p>No special syntax needed either way. In the browser tool, just fill the form. With an agent, describe what you want in plain language — it reads the tool's description and decides on its own when to call it:</p>
+  <div class="quote-ex">Generate a faceless TikTok script about weird space facts, keep it punchy, 30 seconds.</div>
+  <div class="quote-ex">Use the faceless content tool for a Shorts video on budgeting tips for college students.</div>
+  <div class="quote-ex">Give me a storyboard and image prompts for a video about ancient Rome myths, calm and cinematic.</div>
+
+  <h2><span class="num">06</span> What comes back</h2>
+  <p>Both paths return the identical structure — one package covering the whole video:</p>
+  <ul>
+    <li>Title and hook line</li>
+    <li>Timestamped script with delivery notes</li>
+    <li>Scene-by-scene storyboard (camera angle, on-screen text, visual description)</li>
+    <li>One image prompt and one video prompt per scene, ready to paste into Midjourney/DALL·E/ChatGPT image gen or Runway/Kling/Sora</li>
+    <li>A caption with hashtags</li>
+  </ul>
+
+  <div class="divider">· · ·</div>
+
+  <h2><span class="num">07</span> Troubleshooting</h2>
+
+  <h3>Browser tool (Path A)</h3>
+  <div class="check"><div class="box"></div><div><b>Key bar keeps appearing.</b> It only disappears when the page detects it's running inside a Claude.ai artifact. A plain downloaded file will always show it — that's expected, not a bug.</div></div>
+  <div class="check"><div class="box"></div><div><b>"Router/provider issue."</b> Check that <code>node secure-provider-server.js</code> is running and that your selected provider has the required key in <code>.env</code>.</div></div>
+  <div class="check"><div class="box"></div><div><b>Recent Generations is empty after reopening the file.</b> Standalone history lives in that specific browser's local storage — a different browser, a private/incognito window, or clearing site data will all show an empty list.</div></div>
+
+  <h3>Agent / MCP (Path B)</h3>
+  <div class="check"><div class="box"></div><div><b>Tool doesn't show up.</b> Confirm the path in your config is absolute and correct, and that <code>npm install</code> completed in that exact folder.</div></div>
+  <div class="check"><div class="box"></div><div><b>"This MCP client doesn't support sampling" error.</b> Your client can't do MCP sampling, so start the secure router and add <code>FCT_ROUTER_URL=http://127.0.0.1:3737</code> to the MCP server env.</div></div>
+  <div class="check"><div class="box"></div><div><b>Auth / API key errors on the fallback path.</b> Double-check your <code>.env</code> file for the selected provider. The browser should never receive the key.</div></div>
+  <div class="check"><div class="box"></div><div><b>Generation returns malformed output.</b> Rare, but if it happens, just ask your agent to retry — the underlying model occasionally needs a second pass to return clean JSON.</div></div>
+  <div class="check"><div class="box"></div><div><b>Keeping the key safe.</b> If you did add a fallback key, don't commit the config file to a public repo — it lives there in plain text.</div></div>
+
+  <div class="callout ok">
+    <b>Same prompt, different model source.</b> Path A inside Claude uses Claude. Path A standalone uses your selected secure router provider. Path B follows whatever model your connected agent is currently running via sampling, or falls back to the router if configured. Either way it's the identical prompt and JSON schema, so structure stays consistent — only the exact model generating it may differ.
+  </div>
+
+  <footer>
+    <span>faceless-content-toolkit / setup-guide.html</span>
+    <span>browser tool + MCP server · same generator</span>
+  </footer>
+</div>
+</body>
+</html>
+
+<section>
+  <h2>Troubleshooting: router runs but Generate fails</h2>
+  <p>If <code>http://127.0.0.1:3737</code> opens, the router is running. Check <code>http://127.0.0.1:3737/health</code> to see which providers are configured.</p>
+  <p>If the terminal says <code>Configured providers: openai:gpt-5.5</code> but the UI dropdown is set to <strong>Codex OAuth</strong>, select <strong>Auto</strong> or <strong>OpenAI API</strong>, or enable Codex OAuth first.</p>
+  <pre><code>codex login
+codex login status
+
+# .env
+CODEX_OAUTH_ENABLED=true
+CODEX_MODEL=gpt-5-codex
+
+npm run start:router</code></pre>
+</section>

@@ -1,0 +1,3044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Znyth Prompt Studio — Faceless Short-Form Content Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  :root {
+    --bg-dark: #07090E;
+    --panel-bg: #0E121E;
+    --panel-border: #1D2438;
+    --card-bg: #151A29;
+    --card-border: #232B40;
+    --text-main: #F8FAFC;
+    --text-muted: #94A3B8;
+    --text-dim: #475569;
+    --primary: #FF8F3D;
+    --primary-rgb: 255, 143, 61;
+    --primary-hover: #FFA35C;
+    --accent: #6366F1;
+    --accent-hover: #818CF8;
+    --success: #10B981;
+    --error: #F43F5E;
+    --font-sans: 'Inter', sans-serif;
+    --font-header: 'Plus Jakarta Sans', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --glow-shadow: 0 0 20px rgba(255, 143, 61, 0.15);
+  }
+
+  * { box-sizing: border-box; }
+  
+  /* Scrollbars */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg-dark); }
+  ::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+  body {
+    margin: 0;
+    background: var(--bg-dark);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Full Screen SaaS Dashboard Layout */
+  .app-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Navigation Bar */
+  .app-navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    padding: 0 24px;
+    background-color: var(--panel-bg);
+    border-bottom: 1px solid var(--panel-border);
+    z-index: 10;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .brand-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, var(--primary), #FF5A19);
+    border-radius: 8px;
+    color: #07090E;
+    font-weight: 900;
+    box-shadow: 0 0 12px rgba(255, 143, 61, 0.3);
+  }
+
+  .brand-title {
+    font-family: var(--font-header);
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .brand-title span.accent-text {
+    color: var(--primary);
+  }
+
+  .brand-version {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text-dim);
+    background: var(--bg-dark);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--panel-border);
+  }
+
+  /* Workspace split pane */
+  .workspace {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Left Panel: controls & router settings */
+  .sidebar {
+    width: 380px;
+    background-color: var(--panel-bg);
+    border-right: 1px solid var(--panel-border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 24px;
+    gap: 20px;
+    flex-shrink: 0;
+  }
+
+  /* Right Canvas: workspace output / library */
+  .canvas {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+  }
+
+  /* Header inside Canvas */
+  .canvas-header {
+    margin-bottom: 8px;
+  }
+
+  .canvas-header .sub {
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1.5;
+    max-width: 780px;
+    margin-top: 6px;
+  }
+
+  h1 {
+    font-family: var(--font-header);
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+
+  /* Router settings Widget (collapsible box in sidebar) */
+  .keybar {
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+    background: var(--bg-dark);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  
+  .keybar.show {
+    display: flex;
+  }
+
+  .keybar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--panel-border);
+    padding-bottom: 8px;
+  }
+
+  .keybar-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .keybar-status .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--error);
+    display: inline-block;
+  }
+
+  .keybar.saved .dot {
+    background-color: var(--success);
+    box-shadow: 0 0 8px var(--success);
+  }
+
+  .keybar-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .keybar-row select, .keybar-row input {
+    background: #090B10;
+    border: 1px solid var(--panel-border);
+    color: var(--text-main);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: var(--font-mono);
+  }
+
+  .keybar-row select {
+    flex: 1;
+  }
+
+  .keybar-row input {
+    flex: 1.5;
+  }
+
+  .keybar-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  /* Tabs Bar */
+  .tabs {
+    display: flex;
+    gap: 8px;
+    border-bottom: 1px solid var(--panel-border);
+    margin-bottom: 12px;
+    align-items: center;
+  }
+
+  .tab-btn {
+    font-family: var(--font-header);
+    font-weight: 600;
+    font-size: 14px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .tab-btn:hover {
+    color: var(--text-main);
+  }
+
+  .tab-btn.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+  }
+
+  .tab-count {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    background: var(--panel-border);
+    color: var(--text-muted);
+    padding: 2px 6px;
+    border-radius: 10px;
+  }
+
+  .tab-panel {
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+    min-height: 0;
+  }
+  .tab-panel.active {
+    display: flex;
+  }
+
+  /* Form Elements */
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  label {
+    font-family: var(--font-header);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  label span.label-hint {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-weight: 400;
+  }
+
+  input[type=text], select, textarea {
+    width: 100%;
+    background: var(--bg-dark);
+    border: 1px solid var(--panel-border);
+    color: var(--text-main);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: var(--font-sans);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  input[type=text]:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(255, 143, 61, 0.15);
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  .grid-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  /* Buttons */
+  button.go {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--primary), #FF6D1F);
+    color: #07090E;
+    font-family: var(--font-header);
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 14px rgba(255, 143, 61, 0.2);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  button.go:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  button.go:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--primary-hover), #FF853D);
+    box-shadow: 0 6px 20px rgba(255, 143, 61, 0.35);
+    transform: translateY(-1px);
+  }
+
+  button.go:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  .btn-action {
+    font-family: var(--font-header);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+  }
+
+  .btn-action.primary {
+    background: var(--primary);
+    border: none;
+    color: #07090E;
+  }
+
+  .btn-action.primary:hover {
+    background: var(--primary-hover);
+  }
+
+  .btn-action.secondary {
+    background: transparent;
+    border: 1px solid var(--panel-border);
+    color: var(--text-muted);
+  }
+
+  .btn-action.secondary:hover {
+    border-color: var(--text-dim);
+    color: var(--text-main);
+  }
+
+  .status {
+    font-size: 12px;
+    color: var(--primary);
+    min-height: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 143, 61, 0.04);
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 143, 61, 0.1);
+    margin-top: 12px;
+  }
+
+  .status:empty {
+    display: none;
+  }
+
+  .err {
+    color: var(--error);
+    background: rgba(244, 63, 94, 0.05);
+    border-color: rgba(244, 63, 94, 0.15);
+  }
+
+  /* Output Layout styles */
+  .output-workspace {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    margin-top: 16px;
+  }
+
+  .output-header {
+    border-bottom: 1px solid var(--panel-border);
+    padding-bottom: 20px;
+  }
+
+  .output-kicker {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--primary);
+    margin-bottom: 8px;
+  }
+
+  .output-title {
+    font-family: var(--font-header);
+    font-size: 24px;
+    font-weight: 800;
+    margin: 0 0 16px 0;
+  }
+
+  .output-hook-card {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(255, 143, 61, 0.04));
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .hook-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-header);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--primary);
+  }
+
+  .hook-text {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.5;
+    font-style: italic;
+    color: var(--text-main);
+  }
+
+  /* QA Score Panel */
+  .qa-panel {
+    margin-top: 16px;
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.02);
+  }
+  .qa-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .qa-overall-num { font-family: var(--font-header); font-size: 32px; font-weight: 800; }
+  .qa-overall-max { font-family: var(--font-mono); font-size: 14px; color: var(--text-dim); }
+  .qa-grade { font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); }
+  .qa-excellent .qa-overall-num, .qa-excellent .qa-grade { color: #4CA35D; }
+  .qa-strong .qa-overall-num, .qa-strong .qa-grade { color: var(--primary); }
+  .qa-workable .qa-overall-num, .qa-workable .qa-grade { color: #E0A32E; }
+  .qa-weak .qa-overall-num, .qa-weak .qa-grade { color: #D9534F; }
+  .qa-bars { display: flex; flex-direction: column; gap: 7px; }
+  .qa-bar-row { display: grid; grid-template-columns: 130px 1fr 32px; align-items: center; gap: 10px; }
+  .qa-bar-label { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
+  .qa-bar-track { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.06); overflow: hidden; }
+  .qa-bar-fill { height: 100%; border-radius: 3px; background: var(--primary); }
+  .qa-bar-num { font-family: var(--font-mono); font-size: 11px; text-align: right; color: var(--text-dim); }
+  .qa-flags { margin-top: 12px; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,0.08); }
+  .qa-flags-label { font-family: var(--font-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 6px; }
+  .qa-flag-item { font-size: 12.5px; color: var(--text-dim); line-height: 1.5; margin-bottom: 3px; }
+
+  /* Timeline Script style */
+  .timeline-container, .storyboard-container, .caption-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .timeline-header, .storyboard-header, .caption-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--panel-border);
+    padding-bottom: 10px;
+  }
+
+  .timeline-header h3, .storyboard-header h3, .caption-header h3 {
+    font-family: var(--font-header);
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .storyboard-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .copy-btn {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    color: var(--text-muted);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+  }
+
+  .copy-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+
+  .copy-btn-accent {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .copy-btn-accent:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  .timeline-flow {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    padding-left: 20px;
+  }
+
+  .timeline-flow::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 10px;
+    bottom: 10px;
+    width: 2px;
+    background: var(--panel-border);
+  }
+
+  .timeline-item {
+    display: flex;
+    gap: 20px;
+    position: relative;
+    padding-bottom: 24px;
+  }
+
+  .timeline-item:last-child {
+    padding-bottom: 0;
+  }
+
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -20px;
+    top: 5px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--primary);
+    border: 2px solid var(--bg-dark);
+    z-index: 2;
+  }
+
+  .timeline-time {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--primary);
+    font-weight: 600;
+    min-width: 60px;
+    padding-top: 2px;
+  }
+
+  .timeline-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .voiceover-line {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--text-main);
+  }
+
+  .director-note {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-style: italic;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* Scene Grid / Cards */
+  .scene-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  @media (min-width: 1200px) {
+    .scene-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .scene-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+
+  .scene-card:hover {
+    border-color: var(--panel-border);
+  }
+
+  .scene-card-header {
+    background: var(--panel-bg);
+    border-bottom: 1px solid var(--panel-border);
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .scene-number {
+    font-family: var(--font-header);
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .scene-badge {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    padding: 2px 8px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .scene-badge.duration {
+    background: var(--bg-dark);
+    color: var(--text-muted);
+    border: 1px solid var(--panel-border);
+  }
+
+  .scene-badge.camera {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--accent-hover);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+  }
+
+  .scene-card-body {
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .scene-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .scene-label {
+    font-family: var(--font-header);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-dim);
+  }
+
+  .scene-visual-desc {
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--text-main);
+  }
+
+  .text-overlay-container {
+    background: var(--bg-dark);
+    border: 1px solid var(--panel-border);
+    border-radius: 6px;
+    padding: 10px 14px;
+  }
+
+  .text-overlay-preview {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--primary);
+  }
+
+  /* Combined prompts inside scene card */
+  .scene-prompts {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 4px;
+    border-top: 1px dashed var(--panel-border);
+    padding-top: 16px;
+  }
+
+  .prompt-group {
+    background: var(--bg-dark);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+  }
+
+  .prompt-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .prompt-type-badge {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+
+  .prompt-type-badge.image-type {
+    background: rgba(255, 143, 61, 0.08);
+    color: var(--primary);
+  }
+
+  .prompt-type-badge.video-type {
+    background: rgba(99, 102, 241, 0.08);
+    color: var(--accent-hover);
+  }
+
+  .prompt-copy-icon-btn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 2px;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+  }
+
+  .prompt-copy-icon-btn:hover {
+    color: var(--text-main);
+  }
+
+  .prompt-copy-icon-btn.copied {
+    color: var(--success);
+  }
+
+  .prompt-body-text {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-muted);
+    word-break: break-word;
+  }
+
+  /* Social Mockup Post */
+  .post-preview-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 600px;
+  }
+
+  .post-header-mock {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .avatar-mock {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--primary));
+  }
+
+  .profile-info-mock {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .name-mock {
+    font-weight: 600;
+    font-size: 13.5px;
+  }
+
+  .audio-mock {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .post-body-mock {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .post-caption-text {
+    margin: 0;
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--text-main);
+    white-space: pre-wrap;
+  }
+
+  .post-tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .post-tag {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent-hover);
+    background: rgba(99, 102, 241, 0.08);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    padding: 3px 8px;
+    border-radius: 12px;
+  }
+
+  /* Library Styles */
+  .lib-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+
+  .lib-card:hover {
+    border-color: var(--panel-border);
+  }
+
+  .lib-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .lib-name {
+    font-family: var(--font-header);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-main);
+  }
+
+  .lib-badge {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: rgba(255, 143, 61, 0.1);
+    color: var(--primary);
+    padding: 3px 8px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 143, 61, 0.2);
+  }
+
+  .lib-summary {
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--text-muted);
+  }
+
+  .lib-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .lib-actions button {
+    font-family: var(--font-header);
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--bg-dark);
+    border: 1px solid var(--panel-border);
+    color: var(--text-muted);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .lib-actions button:hover {
+    border-color: var(--text-dim);
+    color: var(--text-main);
+  }
+
+  .lib-actions button.primary {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #07090E;
+  }
+
+  .lib-actions button.primary:hover {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
+  }
+
+  .lib-raw {
+    display: none;
+    margin-top: 8px;
+    background: var(--bg-dark);
+    color: var(--text-muted);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    padding: 16px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    white-space: pre-wrap;
+    max-height: 260px;
+    overflow: auto;
+  }
+
+  .lib-raw.show {
+    display: block;
+  }
+
+  .lib-empty {
+    color: var(--text-muted);
+    font-size: 14px;
+    font-style: italic;
+    padding: 16px 0;
+    text-align: center;
+  }
+
+  .hint {
+    color: var(--text-dim);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  /* Log list styling */
+  .log-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-left: 3px solid var(--text-dim);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+  }
+  .log-item.log-error { border-left-color: var(--danger, #e5484d); }
+  .log-item.log-warn { border-left-color: var(--warning, #f5a623); }
+  .log-item.log-success { border-left-color: var(--success, #2ecc71); }
+  .log-item.log-info { border-left-color: var(--accent); }
+  .log-item-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .log-item-msg {
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .log-item-time {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+  .log-item-detail {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    white-space: pre-wrap;
+    line-height: 1.5;
+  }
+
+  /* History list styling */
+  .hist-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 12px 18px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .hist-item:hover {
+    border-color: var(--panel-border);
+    transform: translateX(2px);
+  }
+
+  .hist-main {
+    overflow: hidden;
+    flex: 1;
+  }
+
+  .hist-title {
+    font-family: var(--font-header);
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .hist-meta {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  .hist-del {
+    background: none;
+    border: 1px solid var(--panel-border);
+    color: var(--text-dim);
+    border-radius: 6px;
+    font-size: 11px;
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .hist-del:hover {
+    border-color: var(--error);
+    color: var(--error);
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--panel-border);
+    padding-bottom: 8px;
+    margin: 12px 0 8px;
+  }
+
+  .section-header h2 {
+    font-family: var(--font-header);
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+
+  /* Empty state canvas */
+  .canvas-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    min-height: 350px;
+    border: 2px dashed var(--panel-border);
+    border-radius: 12px;
+    padding: 40px;
+    text-align: center;
+    color: var(--text-dim);
+    gap: 16px;
+  }
+
+  .canvas-empty-state i {
+    color: var(--panel-border);
+  }
+
+  .canvas-empty-state h3 {
+    font-family: var(--font-header);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  .canvas-empty-state p {
+    font-size: 14px;
+    max-width: 420px;
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  /* Responsive styling */
+  @media (max-width: 1024px) {
+    body {
+      overflow-y: auto;
+    }
+    
+    .app-layout {
+      height: auto;
+      overflow: visible;
+    }
+
+    .workspace {
+      flex-direction: column;
+      height: auto;
+      overflow: visible;
+    }
+
+    .sidebar {
+      width: 100%;
+      border-right: none;
+      border-bottom: 1px solid var(--panel-border);
+      height: auto;
+      overflow: visible;
+    }
+
+    .canvas {
+      overflow-y: visible;
+      height: auto;
+      padding: 24px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <!-- Top Navigation Header -->
+  <nav class="app-navbar">
+    <div class="brand">
+      <div class="brand-logo"><i data-lucide="sparkles" style="width: 18px; height: 18px;"></i></div>
+      <div class="brand-title">ZNYTH <span class="accent-text">PROMPT STUDIO</span></div>
+      <div class="brand-version">v1.2.0</div>
+    </div>
+  </nav>
+
+  <!-- Workspace Container -->
+  <div class="workspace">
+    <!-- Left Sidebar: Settings Panel -->
+    <aside class="sidebar">
+      <!-- Router SettingsWidget (hidden in Claude, visible in standalone) -->
+      <div class="keybar" id="keybar">
+        <div class="keybar-header">
+          <span>Local Connection Settings</span>
+          <div class="keybar-status">
+            <span class="dot"></span>
+            <span>Router</span>
+          </div>
+        </div>
+        <div class="keybar-row">
+          <select id="providerSelect" title="Provider Preset">
+            <option value="auto">Auto</option>
+            <option value="anthropic">Anthropic API</option>
+            <option value="openai">OpenAI API</option>
+            <option value="opencode_zen">OpenCode Zen</option>
+            <option value="opencode_go">OpenCode Go</option>
+            <option value="nine_router">9router</option>
+            <option value="neuralwatt">Neuralwatt</option>
+            <option value="codex_oauth">Codex OAuth</option>
+            <option value="custom_openai_compatible">Custom OpenAI</option>
+          </select>
+          <button id="checkRouterBtn" class="btn-action secondary" style="flex:0 0 auto; white-space:nowrap;"><i data-lucide="activity" style="width:12px;"></i> Check</button>
+        </div>
+        <div class="keybar-row">
+          <input id="routerUrlInput" type="text" value="http://127.0.0.1:3737" placeholder="http://127.0.0.1:3737" title="Router URL">
+        </div>
+        <div class="keybar-actions">
+          <button id="saveRouterBtn" class="btn-action primary"><i data-lucide="save" style="width:12px;"></i> Save</button>
+        </div>
+      </div>
+
+      <!-- Controls Form -->
+      <div class="control-group">
+        <label for="workflowSelect"><i data-lucide="workflow" style="width:14px;"></i> Niche Workflow <span class="label-hint">— guides structure & style</span></label>
+        <select id="workflowSelect">
+          <option value="">Built-in — viral-optimized default</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="nicheCategory"><i data-lucide="folder" style="width:14px;"></i> Niche Category <span class="label-hint">— locks generation to built-in niche</span></label>
+        <select id="nicheCategory">
+          <option value="">Custom — use the topic field below</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="topic"><i data-lucide="text-quote" style="width:14px;"></i> Topic / Angle <span id="topicHint" class="label-hint">(specific topic, or leave blank)</span></label>
+        <input id="topic" type="text" placeholder="e.g. weird ocean facts, personal finance for teens...">
+      </div>
+
+      <div class="grid-2col">
+        <div class="control-group">
+          <label for="length"><i data-lucide="clock" style="width:14px;"></i> Video Length</label>
+          <select id="length">
+            <option value="15-20 seconds">15–20 sec</option>
+            <option value="30-40 seconds" selected>30–40 sec</option>
+            <option value="45-60 seconds">45–60 sec</option>
+            <option value="60-90 seconds">60–90 sec</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="tone"><i data-lucide="mic" style="width:14px;"></i> Voice Tone</label>
+          <select id="tone">
+            <option value="punchy, high-energy, curiosity-driven">Punchy & high-energy</option>
+            <option value="calm, cinematic, documentary-style">Calm & cinematic</option>
+            <option value="funny, meme-aware, casual">Funny / meme-y</option>
+            <option value="dramatic, suspenseful, storytelling">Dramatic storytelling</option>
+            <option value="educational, clear, authoritative">Educational & clear</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label for="visualstyle"><i data-lucide="palette" style="width:14px;"></i> Visual Style for Prompts</label>
+        <input id="visualstyle" type="text" value="cinematic realism, moody lighting, shallow depth of field" placeholder="e.g. anime style, 3D pixar style...">
+      </div>
+
+      <div class="grid-2col">
+        <div class="control-group">
+          <label for="imageTool"><i data-lucide="image" style="width:14px;"></i> Format Image Prompt</label>
+          <select id="imageTool">
+            <option value="generic">Generic / any image AI</option>
+            <option value="midjourney">Midjourney</option>
+            <option value="dalle">DALL·E 3</option>
+            <option value="sd">Stable Diffusion</option>
+            <option value="seedream">SeeDream</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="videoTool"><i data-lucide="video" style="width:14px;"></i> Format Video Prompt</label>
+          <select id="videoTool">
+            <option value="generic">Generic / any video AI</option>
+            <option value="sora">Sora</option>
+            <option value="runway">Runway Gen-3</option>
+            <option value="kling">Kling</option>
+            <option value="ltx">LTX Video</option>
+            <option value="luma">Dream Machine (Luma)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label for="extra"><i data-lucide="plus-circle" style="width:14px;"></i> Extra Requirements <span class="label-hint">(optional)</span></label>
+        <textarea id="extra" placeholder="A specific fact, angle, product, CTA, or constraint..."></textarea>
+      </div>
+
+      <div style="margin-top: 8px;">
+        <button class="go" id="goBtn" onclick="generate()"><i data-lucide="rocket" style="width: 16px;"></i> Generate Video Package</button>
+        <div class="status" id="status"></div>
+        <div id="progressWrap" style="display:none; margin-top:6px;">
+          <div id="progressBar" style="width:0%; height:2px; background:var(--primary); border-radius:2px; transition: width 0.3s ease;"></div>
+          <div id="progressLabel" style="font-size:11px; color:var(--text-dim); margin-top:4px;"></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Right Canvas Area -->
+    <main class="canvas">
+      <!-- Tabs Bar -->
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="generate"><i data-lucide="video" style="width:16px;"></i> Workspace</button>
+        <button class="tab-btn" data-tab="library"><i data-lucide="book-open" style="width:16px;"></i> Library <span class="tab-count" id="libCount"></span></button>
+        <button class="tab-btn" data-tab="logs"><i data-lucide="terminal" style="width:16px;"></i> Logs <span class="tab-count" id="logCount"></span></button>
+      </div>
+
+      <!-- WORKSPACE TAB -->
+      <div id="tab-generate" class="tab-panel active">
+        <!-- Main workspace outputs container -->
+
+        <div id="stream-output" style="display:none; flex:1; min-height:0; background:var(--card-bg); border:1px solid var(--accent); border-radius:12px; padding:8px 14px; margin-bottom:12px; overflow-y:auto; font-family:var(--font-mono); font-size:13px; line-height:1.4; white-space:pre-wrap; word-break:break-word; color:var(--text-main);">
+          <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px; padding-bottom:6px; border-bottom:1px solid var(--panel-border);">
+            <span class="pulsing-dot" style="width:8px;height:8px;background:var(--accent);border-radius:50%;display:inline-block;animation:pulse 1s infinite;"></span>
+            <span style="color:var(--accent); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:0.05em;" id="stream-timer">LIVE — Model Output</span>
+          </div>
+          <div id="stream-content"></div>
+        </div>
+        <div id="output">
+          <div class="canvas-empty-state">
+            <i data-lucide="video" style="width: 48px; height: 48px;"></i>
+            <h3>No Video Generated Yet</h3>
+            <p>Configure your niche, length, tone, and visual styles in the left panel, then hit <strong>Generate Video Package</strong> to create a complete script, storyboard, and AI prompt package.</p>
+          </div>
+        </div>
+
+        <!-- History Section (placed inside Workspace tab beneath active output) -->
+        <div id="history-wrap" style="display:none; margin-top: 24px;">
+          <div class="section-header">
+            <h2>Recent Generations</h2>
+            <button class="copy-btn" id="clearHistBtn"><i data-lucide="trash-2" style="width:12px;"></i> Clear all</button>
+          </div>
+          <div id="history-list"></div>
+        </div>
+      </div>
+
+      <!-- LIBRARY TAB -->
+      <div id="tab-library" class="tab-panel">
+        <div class="lib-card" style="background: var(--panel-bg); border-color: var(--panel-border);">
+          <div class="keybar-header" style="border:none; padding:0; margin-bottom:12px; font-size:12px; color:var(--text-main);">
+            <span>Import Niche Workflow Playbook</span>
+          </div>
+          
+          <div class="control-group">
+            <label for="workflowName"><i data-lucide="tag" style="width:14px;"></i> Workflow Name</label>
+            <input id="workflowName" type="text" placeholder="e.g. Dark History Facts, Stoic Quotes...">
+          </div>
+
+          <div class="grid-2col" style="margin-top: 14px;">
+            <div class="control-group">
+              <label for="workflowFile"><i data-lucide="upload" style="width:14px;"></i> Upload Playbook File (.md / .txt)</label>
+              <input id="workflowFile" type="file" accept=".md,.txt,text/markdown,text/plain">
+            </div>
+            <div class="control-group">
+              <label for="workflowPaste"><i data-lucide="clipboard" style="width:14px;"></i> Or Paste Markdown Playbook</label>
+              <textarea id="workflowPaste" style="min-height:42px;" placeholder="Paste hook formulas, pacing rules, visual style notes, prompt patterns..."></textarea>
+            </div>
+          </div>
+
+          <div class="hint" style="margin-top: 12px; margin-bottom: 12px;">
+            Slate Studio parses your playbook details using AI and reformats it into a standardized playbook structure, allowing the generation engine to apply it consistently.
+          </div>
+
+          <button class="go" id="importBtn" style="background: var(--accent); color: var(--text-main); font-size: 13.5px; padding: 10px 18px; width: auto; align-self: flex-start;"><i data-lucide="import" style="width:14px;"></i> Import & Normalize</button>
+          <div class="status" id="importStatus"></div>
+        </div>
+
+        <div class="section-header" style="margin-top: 16px;">
+          <h2>Saved Niche Playbooks</h2>
+        </div>
+        <div id="library-list"><div class="lib-empty">No workflows saved yet.</div></div>
+      </div>
+
+      <!-- LOGS TAB -->
+      <div id="tab-logs" class="tab-panel">
+        <div class="section-header">
+          <h2>Generation Logs</h2>
+          <div style="display:flex; gap:8px;">
+            <button class="copy-btn" id="copyLogsBtn"><i data-lucide="copy" style="width:12px;"></i> Copy all</button>
+            <button class="copy-btn" id="clearLogsBtn"><i data-lucide="trash-2" style="width:12px;"></i> Clear</button>
+          </div>
+        </div>
+        <div id="log-list"><div class="lib-empty">No activity yet. Generate a video package to see logs here.</div></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+// --- Environment detection ---
+// Inside a Claude artifact, window.storage is injected by the host and
+// api.anthropic.com calls are proxied automatically (no key needed).
+// Outside Claude, this app now talks only to the secure local provider router
+// at 127.0.0.1. API keys stay in .env on your computer, never in the browser.
+const IN_CLAUDE = typeof window.storage !== 'undefined';
+const LS_KEY_PROVIDER = 'faceless_gen_provider';
+const LS_KEY_ROUTER_URL = 'faceless_gen_router_url';
+const LS_KEY_HISTORY_PREFIX = 'faceless_gen_history:';
+const LS_KEY_FORM = 'faceless_gen_form';
+const LS_KEY_OUTPUT = 'faceless_gen_output';
+
+// --- Storyboard Master Prompt Template ---
+// { VIDEO TITLE / THEME } and [TITLE IN ENGLISH] get replaced with the generated title.
+// [KEYWORD 1/2/3] get replaced with top hashtags from the generated package.
+const STORYBOARD_MASTER_PROMPT = `Create a crisp, clean infographic storyboard poster for { VIDEO TITLE / THEME } , white background, clean black borders, bold modern typography, high-detail visual storytelling, professional commercial storyboard style.
+
+Overall visual style for every panel: {VISUAL_STYLE}
+
+Design consistency rules:
+- Monochrome base palette with one topic-appropriate accent color — no colored icons, no decorative badges or emblems
+- Clean uniform panel layout, even gutter spacing, consistent border weight on every panel
+- Bold legible single-font-family typography, uniform sizing across all panels
+- White or very light backgrounds only — no dark backgrounds, no inverted panels
+- Professional cinematic storyboard composition, clean separation between panels
+
+Content rules:
+
+* Keep every scene visually clear and easy to understand at a glance.
+
+* Make the story suitable for a short {LENGTH_DESC} video.
+
+* Use the same main character or main subject consistently throughout all panels.
+
+* Avoid confusing details, random objects, or unrelated background elements.
+
+* If the topic is educational, make it friendly and suitable for students.
+
+* If the topic includes dialogue, write the dialogue in eng.
+
+* Avoid unsafe, violent, shocking, or prohibited words. Use safe creative wording instead.
+
+Top header:
+
+\u2022 [TITLE IN ENGLISH]
+
+\u2022 TOTAL VIDEO TIME: {LENGTH_LABEL}
+
+\u2022 8 SHOTS \u00b7 [KEYWORD 1] \u00b7 [KEYWORD 2] \u00b7 [KEYWORD 3]
+
+
+Main character / subject:
+
+Describe one clear main character or subject that fits the title. Keep this same character or subject throughout every panel. Describe outfit, mood, expression, important props, and environment. The character should have a clear emotional journey from beginning to end.
+
+Storyboard structure:
+
+Create exactly 8 panels.
+
+Each panel should represent about {SECONDS_PER_PANEL} seconds.
+
+Each panel must include:
+
+* Panel title
+
+* Camera angle
+
+* Main action
+
+* Visual details
+
+* Emotion or reaction
+
+* Time hint if useful
+
+* eng dialogue only if needed
+
+8 panels:
+
+Panel 1 \u2014 THE OPENER:
+
+Wide establishing shot. Introduce the main character, setting, mood, and key object. The viewer should immediately understand where the story begins.
+
+Panel 2 \u2014 THE SETUP:
+
+Medium shot or close-up. Show the character preparing for the main action. Reveal the important tool, object, problem, or goal.
+
+Panel 3 \u2014 THE FIRST ACTION:
+
+Close-up. The character begins the main action. Show movement, focus, and the first visible change.
+
+Panel 4 \u2014 THE TURNING POINT:
+
+Extreme close-up or dramatic angle. Show the most important moment where something changes clearly. This should be the strongest visual moment in the middle of the story.
+
+Panel 5 \u2014 THE PROGRESS:
+
+Medium close-up. Show the result developing. The character continues working, reacting, or moving toward the goal.
+
+Panel 6 \u2014 THE UNIQUE ANGLE:
+
+Use a special camera angle such as overhead shot, side shot, low angle, reflection shot, or point-of-view shot. Show the same action from a visually interesting perspective.
+
+Panel 7 \u2014 THE FINAL ACTION:
+
+Close-up dramatic shot. Show the final step before the result is revealed. Make the transformation or outcome almost complete.
+
+Panel 8 \u2014 THE REVEAL:
+
+Wide emotional shot. Show the final result clearly. The main character reacts with satisfaction, surprise, happiness, pride, or another emotion that fits the title. End with a complete visual resolution.
+
+Important requirements:
+
+* Total video time must be {LENGTH_DESC}.
+
+* Use exactly 8 panels.
+
+* Make every panel visually different.
+
+* Keep the same character or subject throughout.
+
+* Make the story clear even without reading long text.
+
+* Use cinematic, clean, professional storyboard poster composition.
+
+* No unsafe, violent, weapon-related, or shocking content.
+
+* If the title is in eng, keep the meaning but create the storyboard prompt in English.
+
+* If dialogue appears, write only short eng dialogue.
+
+* Do not add explanations outside the final prompt.`;
+
+function saveFormState(){
+  try{
+    const state = {
+      topic: document.getElementById('topic')?.value || '',
+      niche: document.getElementById('nicheCategory')?.value || '',
+      length: document.getElementById('length')?.value || '30-40 seconds',
+      tone: document.getElementById('tone')?.value || '',
+      visualstyle: document.getElementById('visualstyle')?.value || '',
+      imageTool: document.getElementById('imageTool')?.value || 'generic',
+      videoTool: document.getElementById('videoTool')?.value || 'generic',
+      extra: document.getElementById('extra')?.value || '',
+      workflow: document.getElementById('workflowSelect')?.value || ''
+    };
+    localStorage.setItem(LS_KEY_FORM, JSON.stringify(state));
+  }catch(e){}
+}
+
+function restoreFormState(){
+  try{
+    const raw = localStorage.getItem(LS_KEY_FORM);
+    if(!raw) return;
+    const state = JSON.parse(raw);
+    const set = (id, val) => { const el = document.getElementById(id); if(el && val) el.value = val; };
+    set('topic', state.topic);
+    set('nicheCategory', state.niche);
+    set('length', state.length);
+    set('tone', state.tone);
+    set('visualstyle', state.visualstyle);
+    set('imageTool', state.imageTool);
+    set('videoTool', state.videoTool);
+    set('extra', state.extra);
+    set('workflowSelect', state.workflow);
+  }catch(e){}
+}
+
+function saveLastOutput(pkg){
+  try{ localStorage.setItem(LS_KEY_OUTPUT, JSON.stringify(pkg)); }catch(e){}
+}
+
+function restoreLastOutput(){
+  try{
+    const raw = localStorage.getItem(LS_KEY_OUTPUT);
+    if(!raw) return;
+    const pkg = JSON.parse(raw);
+    if(pkg && pkg.title) render(pkg, true);
+  }catch(e){}
+}
+
+function getProvider(){
+  try{ return localStorage.getItem(LS_KEY_PROVIDER) || 'auto'; }catch(e){ return 'auto'; }
+}
+function setProvider(provider){
+  try{ localStorage.setItem(LS_KEY_PROVIDER, provider || 'auto'); }catch(e){}
+}
+function getRouterUrl(){
+  try{ return localStorage.getItem(LS_KEY_ROUTER_URL) || 'http://127.0.0.1:3737'; }catch(e){ return 'http://127.0.0.1:3737'; }
+}
+function setRouterUrl(url){
+  const clean = (url || '').trim().replace(/\/+$/, '');
+  try{ localStorage.setItem(LS_KEY_ROUTER_URL, clean || 'http://127.0.0.1:3737'); }catch(e){}
+}
+
+// --- Storage abstraction: Claude's window.storage when available, else localStorage ---
+const kv = {
+  async set(key, value){
+    if(IN_CLAUDE) return window.storage.set(key, value, false);
+    try{ localStorage.setItem(LS_KEY_HISTORY_PREFIX + key, value); }catch(e){}
+  },
+  async get(key){
+    if(IN_CLAUDE) return window.storage.get(key, false);
+    try{
+      const v = localStorage.getItem(LS_KEY_HISTORY_PREFIX + key);
+      return v == null ? null : { key, value: v };
+    }catch(e){ return null; }
+  },
+  async delete(key){
+    if(IN_CLAUDE) return window.storage.delete(key, false);
+    try{ localStorage.removeItem(LS_KEY_HISTORY_PREFIX + key); }catch(e){}
+  },
+  async list(prefix){
+    if(IN_CLAUDE) return window.storage.list(prefix, false);
+    try{
+      const keys = [];
+      for(let i=0;i<localStorage.length;i++){
+        const k = localStorage.key(i);
+        if(k && k.startsWith(LS_KEY_HISTORY_PREFIX + prefix)){
+          keys.push(k.slice(LS_KEY_HISTORY_PREFIX.length));
+        }
+      }
+      return { keys };
+    }catch(e){ return { keys: [] }; }
+  }
+};
+
+function initKeyBar(){
+  const bar = document.getElementById('keybar');
+  if(IN_CLAUDE){ bar.classList.remove('show'); return; }
+  bar.classList.add('show');
+  const providerSel = document.getElementById('providerSelect');
+  const urlInput = document.getElementById('routerUrlInput');
+  const statusDot = bar.querySelector('.dot');
+  const statusLabel = bar.querySelector('.keybar-status span:last-child');
+  const urlRow = urlInput?.closest('.keybar-row');
+  const saveBtn = document.getElementById('saveRouterBtn');
+
+  // Auto-detect: if this page is served by the router, lock the URL
+  const viaRouter = window.location.port === '3737' || window.location.hostname === '127.0.0.1';
+  if(viaRouter){
+    const autoUrl = window.location.origin;
+    setRouterUrl(autoUrl);
+    if(urlInput) urlInput.value = autoUrl;
+    if(urlRow) urlRow.style.display = 'none';
+    if(saveBtn) saveBtn.style.display = 'none';
+  }else{
+    providerSel.value = getProvider();
+    urlInput.value = getRouterUrl();
+  }
+
+  async function runCheck(){
+    setProvider(providerSel.value);
+    const url = getRouterUrl();
+    if(urlInput && !viaRouter) setRouterUrl(urlInput.value);
+    const statusEls = [document.getElementById('status'), document.getElementById('importStatus')].filter(Boolean);
+    if(window.__generating) return; // don't overwrite status during active generation
+    try{
+      const res = await fetch(url + '/health');
+      if(!res.ok) throw new Error('Router returned ' + res.status);
+      const data = await res.json();
+      const providers = data.providers || [];
+      const configured = providers.filter(p=>p.configured && p.id !== 'auto').map(p=>p.id).join(', ') || 'none';
+      const selected = getProvider();
+      const selectedInfo = providers.find(p=>p.id === selected);
+      if(selected !== 'auto' && selectedInfo && !selectedInfo.configured){
+        const missing = (selectedInfo.missing || []).join(', ') || 'provider settings';
+        const selectedLabel = selectedInfo.label || selected;
+        statusEls.forEach(el=>{ el.innerHTML = `<span class="err">Router connected, but selected provider not configured: ${esc(selectedLabel)}. Missing: ${esc(missing)}.</span>`; });
+      } else if(configured === 'none'){
+        statusEls.forEach(el=>{ el.innerHTML = '<span class="err">Router connected, but no provider configured. Add a key to .env or enable Codex OAuth.</span>'; });
+      } else {
+        statusEls.forEach(el=>{ el.innerHTML = `<span>Router connected. Providers: ${esc(configured)}.</span>`; });
+      }
+      bar.classList.add('saved');
+      if(statusLabel) statusLabel.textContent = 'Connected';
+    }catch(e){
+      statusEls.forEach(el=>{ el.innerHTML = `<span class="err">Router not reachable at ${esc(url)}. Run: npm run start:router</span>`; });
+      bar.classList.remove('saved');
+      if(statusDot) statusDot.style.background = 'var(--error)';
+      if(statusLabel) statusLabel.textContent = 'Offline';
+    }
+  }
+
+  document.getElementById('checkRouterBtn').addEventListener('click', runCheck);
+  if(saveBtn){
+    saveBtn.addEventListener('click', ()=>{
+      setProvider(providerSel.value);
+      setRouterUrl(urlInput?.value || getRouterUrl());
+      bar.classList.add('saved');
+    });
+  }
+
+  // When served by router, skip first check (page loading proves router is up)
+  if(!viaRouter) runCheck();
+  setInterval(runCheck, 15000);
+}
+
+async function callModel(systemPrompt, userContent, maxTokens){
+  if(IN_CLAUDE){
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-5",
+        max_tokens: maxTokens,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userContent }]
+      })
+    });
+    if(!response.ok){
+      const errText = await response.text();
+      throw new Error(`API error ${response.status}: ${errText}`);
+    }
+    const data = await response.json();
+    return (data.content || []).map(b => b.text || '').join('\n');
+  }
+
+  const providerSel = document.getElementById('providerSelect');
+  const routerInput = document.getElementById('routerUrlInput');
+  setProvider(providerSel ? providerSel.value : getProvider());
+  setRouterUrl(routerInput ? routerInput.value : getRouterUrl());
+
+  const imageToolEl = document.getElementById('imageTool');
+  const videoToolEl = document.getElementById('videoTool');
+  const lengthEl = document.getElementById('length');
+  const imageTool = imageToolEl ? imageToolEl.value : 'generic';
+  const videoTool = videoToolEl ? videoToolEl.value : 'generic';
+  const length = lengthEl ? lengthEl.value : '30-40 seconds';
+
+  const ctrl = new AbortController();
+  const timeout = setTimeout(() => ctrl.abort(), 300000);
+  try {
+    const response = await fetch(getRouterUrl() + '/v1/messages', {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: ctrl.signal,
+      body: JSON.stringify({
+        provider: getProvider(),
+        max_tokens: maxTokens,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userContent }],
+        imageTool: imageTool,
+        videoTool: videoTool,
+        length: length
+      })
+    });
+    if(!response.ok){
+      const errText = await response.text();
+      throw new Error(`Router/API error ${response.status}: ${errText}`);
+    }
+    const data = await response.json();
+    return (data.content || []).map(b => b.text || '').join('\n');
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function* callModelStream(systemPrompt, userContent, maxTokens){
+  const routerInput = document.getElementById('routerUrlInput');
+  setRouterUrl(routerInput ? routerInput.value : getRouterUrl());
+
+  const imageToolEl = document.getElementById('imageTool');
+  const videoToolEl = document.getElementById('videoTool');
+  const lengthEl = document.getElementById('length');
+  const imageTool = imageToolEl ? imageToolEl.value : 'generic';
+  const videoTool = videoToolEl ? videoToolEl.value : 'generic';
+  const length = lengthEl ? lengthEl.value : '30-40 seconds';
+
+  const ctrl = new AbortController();
+  const timeout = setTimeout(() => ctrl.abort(), 300000);
+  try {
+    const response = await fetch(getRouterUrl() + '/v1/messages/stream', {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: ctrl.signal,
+      body: JSON.stringify({
+        provider: getProvider(),
+        max_tokens: maxTokens,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userContent }],
+        imageTool: imageTool,
+        videoTool: videoTool,
+        length: length
+      })
+    });
+
+    if(!response.ok){
+      const errText = await response.text();
+      throw new Error(`Router/API error ${response.status}: ${errText}`);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while(true){
+      const { done, value } = await reader.read();
+      if(done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for(const line of lines){
+        const trimmed = line.trim();
+        if(!trimmed.startsWith('data:')) continue;
+        const json = trimmed.slice(5).trim();
+        try {
+          const event = JSON.parse(json);
+          yield event;
+        } catch(e) {
+          // skip parse errors
+        }
+      }
+    }
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function copyText(text, btn){
+  try{
+    await navigator.clipboard.writeText(text);
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i data-lucide="check" style="width:12px; height:12px;"></i> Copied';
+    lucide.createIcons();
+    setTimeout(()=>{
+      btn.innerHTML = orig;
+      lucide.createIcons();
+    }, 1500);
+  }catch(e){}
+}
+
+function esc(s){
+  const d = document.createElement('div');
+  d.innerText = s == null ? '' : s;
+  return d.innerHTML;
+}
+
+function timeAgo(ts){
+  const s = Math.floor((Date.now() - ts)/1000);
+  if(s < 60) return 'just now';
+  if(s < 3600) return Math.floor(s/60) + 'm ago';
+  if(s < 86400) return Math.floor(s/3600) + 'h ago';
+  return Math.floor(s/86400) + 'd ago';
+}
+
+async function saveToHistory(entry){
+  try{
+    await kv.set('gen:' + entry.ts, JSON.stringify(entry));
+  }catch(e){ console.error('history save failed', e); }
+}
+
+async function loadHistory(){
+  const wrap = document.getElementById('history-wrap');
+  const list = document.getElementById('history-list');
+  try{
+    const res = await kv.list('gen:');
+    const keys = (res && res.keys) ? res.keys : [];
+    if(keys.length === 0){ wrap.style.display = 'none'; return; }
+
+    const entries = [];
+    for(const k of keys){
+      try{
+        const r = await kv.get(k);
+        if(r && r.value) entries.push(JSON.parse(r.value));
+      }catch(e){ /* skip missing/corrupt */ }
+    }
+    entries.sort((a,b)=> b.ts - a.ts);
+    const recent = entries.slice(0, 15);
+
+    if(recent.length === 0){ wrap.style.display = 'none'; return; }
+    wrap.style.display = 'block';
+    list.innerHTML = '';
+    recent.forEach(entry=>{
+      const row = document.createElement('div');
+      row.className = 'hist-item';
+      row.innerHTML = `<div class="hist-main">
+          <div class="hist-title"><i data-lucide="video" style="width:14px; height:14px; vertical-align:middle; margin-right:8px; color:var(--primary);"></i>${esc(entry.pkg.title)}</div>
+          <div class="hist-meta">${esc(entry.topic)} · ${esc(entry.length)} · ${timeAgo(entry.ts)}</div>
+        </div>
+        <button class="hist-del"><i data-lucide="trash-2" style="width:12px; height:12px; vertical-align:middle; margin-right:4px;"></i>Delete</button>`;
+      row.querySelector('.hist-main').addEventListener('click', ()=>{
+        render(entry.pkg);
+        document.getElementById('output').scrollIntoView({behavior:'smooth'});
+      });
+      row.querySelector('.hist-del').addEventListener('click', async (ev)=>{
+        ev.stopPropagation();
+        try{ await kv.delete('gen:' + entry.ts); }catch(e){}
+        loadHistory();
+      });
+      list.appendChild(row);
+    });
+    lucide.createIcons();
+  }catch(e){
+    console.error('history load failed', e);
+    wrap.style.display = 'none';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  initKeyBar();
+  restoreFormState();
+  restoreLastOutput();
+  loadHistory();
+  initTabs();
+  initLogsPanel();
+  loadLibrary();
+  populateNicheSelect();
+
+  // Auto-save form state on any change
+  const formIds = ['topic', 'nicheCategory', 'length', 'tone', 'visualstyle', 'imageTool', 'videoTool', 'extra', 'workflowSelect'];
+  formIds.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('change', saveFormState);
+  });
+  document.getElementById('topic')?.addEventListener('input', saveFormState);
+  document.getElementById('extra')?.addEventListener('input', saveFormState);
+  document.getElementById('visualstyle')?.addEventListener('input', saveFormState);
+
+  document.getElementById('clearHistBtn').addEventListener('click', async ()=>{
+    try{
+      const res = await kv.list('gen:');
+      const keys = (res && res.keys) ? res.keys : [];
+      for(const k of keys){ await kv.delete(k); }
+    }catch(e){}
+    loadHistory();
+  });
+  document.getElementById('importBtn').addEventListener('click', importWorkflow);
+  lucide.createIcons();
+});
+
+function populateNicheSelect(){
+  const sel = document.getElementById('nicheCategory');
+  const topic = document.getElementById('topic');
+  const hint = document.getElementById('topicHint');
+  const toneSel = document.getElementById('tone');
+  const visualInput = document.getElementById('visualstyle');
+  const genericTone = toneSel.value;
+  const genericVisual = visualInput.value;
+
+  sel.innerHTML = '<option value="">Custom — use the topic field below</option>' +
+    NICHE_LIST.map(n => `<option value="${n.id}">${esc(n.label)}</option>`).join('');
+  sel.addEventListener('change', ()=>{
+    const niche = NICHE_LIST.find(n=>n.id === sel.value);
+    if(niche){
+      topic.placeholder = `optional — e.g. a specific ${niche.label.toLowerCase()} angle. Leave blank and Claude picks one.`;
+      hint.textContent = '(optional within this niche)';
+      toneSel.value = niche.defaultTone || genericTone;
+      visualInput.value = niche.defaultVisual || genericVisual;
+    } else {
+      topic.placeholder = 'e.g. weird ocean facts, personal finance for teens, ancient Rome myths...';
+      hint.textContent = '(specific angle, or leave blank)';
+      toneSel.value = genericTone;
+      visualInput.value = genericVisual;
+    }
+  });
+}
+
+function initTabs(){
+  document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> switchTab(btn.dataset.tab));
+  });
+}
+function switchTab(name){
+  document.querySelectorAll('.tab-btn').forEach(b=> b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.tab-panel').forEach(p=> p.classList.toggle('active', p.id === 'tab-' + name));
+}
+
+// ============ LIBRARY (niche workflow guides) ============
+let libraryCache = [];
+
+const NORMALIZE_SYS = `You are a content-strategy formatter for a faceless short-form video generator (Shorts/Reels/TikTok).
+You will receive a raw, possibly messy or informal niche workflow/pipeline description in markdown.
+Convert it into a normalized JSON object — ONLY valid JSON, no markdown fences, no preamble — matching exactly this schema:
+{
+  "name": "concise niche/workflow name",
+  "summary": "1-2 sentence summary of what makes content in this niche work",
+  "hook_style": "how hooks should be written for this niche - patterns, phrasing, timing",
+  "script_structure": "how the script should be structured/paced - beats, sections, story arc",
+  "tone_defaults": "default tone/voice for this niche",
+  "visual_style_defaults": "default visual style guidance for image/video prompts",
+  "storyboard_rules": "rules on shot types, pacing, transitions for this niche",
+  "prompt_style": "specific notes on how image/video generation prompts should be written for this niche (style keywords, composition, recurring motifs, things to avoid)",
+  "cta_style": "how calls-to-action / engagement prompts should be phrased for this niche",
+  "hashtag_strategy": "guidance on hashtag selection/count for this niche",
+  "pacing_notes": "notes on scene length/cut frequency for this niche",
+  "extra_rules": "any other niche-specific rules, do's/don'ts, or examples mentioned in the source"
+}
+Extract and infer as much as possible from the source. If a field isn't covered by the source, fill it with a sensible default drawn from general high-performing short-form-video practice rather than leaving it empty. Keep every field under 400 characters.`;
+
+function libId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+async function saveLibraryEntry(entry){
+  await kv.set('lib:' + entry.id, JSON.stringify(entry));
+}
+async function deleteLibraryEntry(id){
+  await kv.delete('lib:' + id);
+}
+
+async function loadLibrary(){
+  const list = document.getElementById('library-list');
+  const select = document.getElementById('workflowSelect');
+  const countEl = document.getElementById('libCount');
+  try{
+    const res = await kv.list('lib:');
+    const keys = (res && res.keys) ? res.keys : [];
+    const entries = [];
+    for(const k of keys){
+      try{ const r = await kv.get(k); if(r && r.value) entries.push(JSON.parse(r.value)); }
+      catch(e){ /* skip corrupt */ }
+    }
+    entries.sort((a,b)=> b.created - a.created);
+    libraryCache = entries;
+
+    countEl.textContent = entries.length ? `(${entries.length})` : '';
+
+    const prevSelected = select.value;
+    select.innerHTML = '<option value="">Built-in — viral-optimized default</option>' +
+      entries.map(e=> `<option value="${esc(e.id)}">${esc(e.name)}</option>`).join('');
+    if(entries.some(e=>e.id === prevSelected)) select.value = prevSelected;
+
+    if(entries.length === 0){
+      list.innerHTML = '<div class="lib-empty">No workflows saved yet. Import one above, or just generate — the built-in default handles any niche.</div>';
+      return;
+    }
+    list.innerHTML = entries.map(e=> `
+      <div class="lib-card" data-id="${esc(e.id)}">
+        <div class="lib-head">
+          <div>
+            <div class="lib-name">${esc(e.name)}</div>
+          </div>
+          <span class="lib-badge">Library</span>
+        </div>
+        <div class="lib-summary">${esc(e.guide.summary)}</div>
+        <div class="lib-actions">
+          <button class="primary" data-act="use"><i data-lucide="play" style="width:12px; height:12px; vertical-align:middle; margin-right:4px;"></i>Use Playbook</button>
+          <button data-act="raw"><i data-lucide="eye" style="width:12px; height:12px; vertical-align:middle; margin-right:4px;"></i>View MD</button>
+          <button data-act="del"><i data-lucide="trash-2" style="width:12px; height:12px; vertical-align:middle; margin-right:4px;"></i>Delete</button>
+        </div>
+        <div class="lib-raw" id="raw-${esc(e.id)}">${esc(e.raw_md)}</div>
+      </div>`).join('');
+
+    list.querySelectorAll('.lib-card').forEach(card=>{
+      const id = card.dataset.id;
+      card.querySelector('[data-act="use"]').addEventListener('click', ()=>{
+        document.getElementById('workflowSelect').value = id;
+        switchTab('generate');
+      });
+      card.querySelector('[data-act="raw"]').addEventListener('click', ()=>{
+        document.getElementById('raw-' + id).classList.toggle('show');
+      });
+      card.querySelector('[data-act="del"]').addEventListener('click', async ()=>{
+        await deleteLibraryEntry(id);
+        loadLibrary();
+      });
+    });
+    lucide.createIcons();
+  }catch(e){
+    console.error('library load failed', e);
+  }
+}
+
+function readFileAsText(file){
+  return new Promise((resolve, reject)=>{
+    const r = new FileReader();
+    r.onload = ()=> resolve(r.result);
+    r.onerror = ()=> reject(new Error('Could not read file'));
+    r.readAsText(file);
+  });
+}
+
+async function importWorkflow(){
+  const nameInput = document.getElementById('workflowName');
+  const fileInput = document.getElementById('workflowFile');
+  const pasteInput = document.getElementById('workflowPaste');
+  const btn = document.getElementById('importBtn');
+  const status = document.getElementById('importStatus');
+
+  const name = nameInput.value.trim();
+  let raw = pasteInput.value.trim();
+
+  if(fileInput.files && fileInput.files[0]){
+    try{ raw = (await readFileAsText(fileInput.files[0])).trim(); }
+    catch(e){ status.innerHTML = '<span class="err">Could not read that file.</span>'; return; }
+  }
+
+  if(!name){ status.innerHTML = '<span class="err">Give this workflow a name first.</span>'; return; }
+  if(!raw){ status.innerHTML = '<span class="err">Upload a .md file or paste the workflow content.</span>'; return; }
+
+  if(!IN_CLAUDE && !getRouterUrl()){
+    status.innerHTML = '<span class="err">Start the secure provider router first: node secure-provider-server.js</span>';
+    return;
+  }
+
+  btn.disabled = true;
+  status.textContent = 'Reading and normalizing workflow...';
+
+  try{
+    const rawResp = await callModel(NORMALIZE_SYS, `Workflow name: ${name}
+
+Raw workflow content:
+${raw}`, 1500);
+    const clean = rawResp.replace(/```json|```/g, '').trim();
+    const guide = JSON.parse(clean);
+
+    const entry = { id: libId(), name: guide.name || name, created: Date.now(), guide, raw_md: raw };
+    await saveLibraryEntry(entry);
+    await loadLibrary();
+
+    nameInput.value = ''; pasteInput.value = ''; fileInput.value = '';
+    status.textContent = 'Saved to library.';
+  }catch(e){
+    console.error(e);
+    status.innerHTML = '<span class="err">Something went wrong normalizing this. Try again.</span>';
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+// Curated for advertiser-friendly / high-RPM categories - finance, legal, insurance, tech B2B,
+// health, and premium documentary content consistently draw higher ad rates than meme/story niches.
+const NICHE_LIST = [
+  { id:'finance', label:'Personal finance & investing', hint:'saving, investing basics, money psychology, budgeting, market explainers',
+    defaultTone:'educational, clear, authoritative',
+    defaultVisual:'clean modern motion graphics, minimal flat illustration, chart/data overlays, professional lifestyle b-roll' },
+  { id:'business', label:'Business & entrepreneurship', hint:'startups, business models, case studies, growth strategy',
+    defaultTone:'punchy, high-energy, curiosity-driven',
+    defaultVisual:'modern corporate cinematic, sleek office and startup b-roll, dynamic motion graphics' },
+  { id:'real-estate', label:'Real estate & property investing', hint:'buying/selling, rental income, market trends, mortgage explainers',
+    defaultTone:'educational, clear, authoritative',
+    defaultVisual:'bright architectural photography style, elegant interiors and exteriors, warm natural lighting' },
+  { id:'tech-ai', label:'Tech, AI & software tools', hint:'new tools, AI developments, SaaS breakdowns, productivity software',
+    defaultTone:'punchy, high-energy, curiosity-driven',
+    defaultVisual:'sleek futuristic tech aesthetic, clean UI close-ups, neon-accented modern studio lighting' },
+  { id:'health', label:'Health & medical explainers', hint:'conditions, treatments, medical myths, evidence-based health info',
+    defaultTone:'educational, clear, authoritative',
+    defaultVisual:'clean clinical-but-warm medical illustration, soft natural lighting, minimal editorial photography style' },
+  { id:'legal', label:'Legal explainers & lawsuits', hint:'rights, contracts, notable cases, plain-English legal breakdowns',
+    defaultTone:'educational, clear, authoritative',
+    defaultVisual:'polished editorial documentary style, courtroom/office b-roll, muted professional color palette' },
+  { id:'insurance', label:'Insurance & money-saving explainers', hint:'coverage types, claims, how to avoid overpaying',
+    defaultTone:'educational, clear, authoritative',
+    defaultVisual:'clean modern motion graphics, relatable everyday-life b-roll, warm approachable lighting' },
+  { id:'cybersecurity', label:'Cybersecurity & online safety', hint:'scams, data breaches, privacy tools, staying safe online',
+    defaultTone:'dramatic, suspenseful, storytelling',
+    defaultVisual:'dark moody tech-thriller aesthetic, glowing code and network visuals, high-contrast lighting' },
+  { id:'career', label:'Career & high-income skills', hint:'job market, negotiation, upskilling, remote work, resumes',
+    defaultTone:'punchy, high-energy, curiosity-driven',
+    defaultVisual:'modern professional lifestyle photography, clean workspace b-roll, confident natural lighting' },
+  { id:'luxury', label:'Luxury & high-ticket lifestyle', hint:'premium products, high-end travel, collectibles, aspirational spend',
+    defaultTone:'calm, cinematic, documentary-style',
+    defaultVisual:'high-end luxury editorial photography, glossy cinematic lighting, aspirational travel and lifestyle scenes' },
+  { id:'science-space', label:'Science & space (educational)', hint:'physics, space exploration, breakthroughs - real science made accessible',
+    defaultTone:'educational, clear, authoritative',
+    defaultVisual:'cinematic science-documentary style, deep space and macro science visuals, dramatic directional lighting' },
+  { id:'nature-doc', label:'Nature & wildlife documentary (BBC Earth style)',
+    hint:'animal behavior, ecosystems, survival, migration - narrated like a premium nature documentary',
+    defaultTone:'calm, cinematic, documentary-style',
+    defaultVisual:'BBC Earth style nature documentary, ultra-detailed telephoto and macro wildlife footage, natural lighting, slow-motion elegance, epic scale' },
+  { id:'body-doc', label:'Human body & anatomy documentary (BBC Earth style)',
+    hint:'how the body works - organs, cells, systems - narrated like a premium science documentary',
+    defaultTone:'calm, cinematic, documentary-style',
+    defaultVisual:'BBC Earth style science documentary, elegant macro and medical visualization blend, clinical but awe-inspiring, natural lighting, cinematic depth of field' }
+];
+
+// Formatting notes adapted from prompt-engineering best practice for each target
+// image/video generation tool - keeps image_prompt/video_prompt output paste-ready.
+const IMAGE_TOOL_NOTES = {
+  generic: 'Write image_prompt as a clear, detailed visual description usable in most image AI tools.',
+  midjourney: 'Write image_prompt in Midjourney style: comma-separated descriptors (not prose), subject first, then style/mood/lighting/composition, ending with parameters like "--ar 9:16 --style raw".',
+  dalle: 'Write image_prompt as a natural-language prose description for DALL·E 3. Separate foreground/midground/background when the scene is complex. Add "no text in the image" unless on-screen text is intended.',
+  sd: 'Write image_prompt for Stable Diffusion using (keyword:weight) syntax for key elements, plus a short separate negative_prompt field listing unwanted elements.',
+  seedream: 'Write image_prompt for SeeDream: state the art style first (e.g. anime, cinematic, painterly), then scene content, then mood/atmosphere descriptors.'
+};
+// Practical workflow for making the *generated media* (not just the prompt text) match
+// frame-to-frame: chain scenes off the previous scene's actual output image wherever the
+// tool supports it, instead of generating each scene cold from a fresh prompt.
+const IMAGE_TOOL_CHAINING = {
+  generic: 'After generating Scene 1\'s image, feed that image back in as a reference/init image (whatever "image-to-image", "remix", or "upload reference" feature the tool has) when generating Scene 2, and so on down the chain - this locks subject, palette, and style far better than prompt wording alone.',
+  midjourney: 'Use --cref <scene-1-image-url> (character reference) to lock the subject/character across every later scene, and --sref <scene-1-image-url> (style reference) to lock the art style/palette. Keep --cref/--sref/--ar/--style at the very end of the prompt, after the descriptors.',
+  dalle: 'DALL·E 3 has no native seed or reference-image input, so consistency depends entirely on repeating the exact same locked wording (subject, palette, lighting, lens) in every single prompt - do not paraphrase these anchor phrases between scenes.',
+  sd: 'Reuse the same seed value for every scene, and run each new scene as img2img with the previous scene\'s output as the init image at a low-to-medium denoise strength (roughly 0.3-0.5) so structure and palette carry over while the pose/action changes.',
+  seedream: 'If the target SeeDream/Sora image tool supports a reference-image or "edit" upload, feed the previous scene\'s output in as that reference before generating the next scene, rather than starting each one from a blank prompt.'
+};
+const VIDEO_TOOL_NOTES = {
+  generic: 'Write video_prompt as a clear shot description usable in most video AI tools, including camera movement and duration.',
+  sora: 'Write video_prompt like a film director\'s shot description for Sora - specify camera movement explicitly (static / dolly / crane / handheld) since it changes the output dramatically.',
+  runway: 'Write video_prompt in cinematic language for Runway Gen-3 - reference a film style or visual reference for aesthetic consistency across scenes.',
+  kling: 'Write video_prompt for Kling with explicit body-movement and motion description, plus a specific camera angle and shot type - Kling is strong at realistic human/subject motion.',
+  ltx: 'Write video_prompt for LTX Video: keep it concise and concrete, and explicitly state motion intensity (subtle / moderate / high) and resolution intent.',
+  luma: 'Write video_prompt for Dream Machine (Luma): reference lighting setup, lens type, and color grading style for cinematic quality.'
+};
+// Frame-chaining: start each new clip from the end of the previous one so motion/position
+// is continuous, instead of every clip starting from an unrelated static pose.
+const VIDEO_TOOL_CHAINING = {
+  generic: 'Wherever the platform supports a "start frame" or "first frame" input, use the last frame of the previous scene\'s clip as the start frame of the next one, so the video reads as one continuous shot rather than a slideshow of clips.',
+  sora: 'Use Sora\'s remix/reference-clip feature, or extract the last frame of the previous clip and feed it in as the starting frame for the next generation.',
+  runway: 'Use Runway\'s image-to-video mode with the previous clip\'s final frame as the input image, so each new clip picks up exactly where the last one ended.',
+  kling: 'Upload the previous scene\'s final frame as Kling\'s start-frame/reference image so subject position and motion continue smoothly into the next clip.',
+  ltx: 'If the tool supports frame-conditioned generation, feed in the previous clip\'s last frame as the starting condition for the next one to preserve continuity.',
+  luma: 'Use Dream Machine\'s keyframe feature: set the previous scene\'s last frame as this scene\'s first keyframe so the transition is seamless.'
+};
+
+// --- QA scoring engine (mirrors validation.js scoreVideoPackage — kept in
+// sync manually since the browser can't import the Node module directly) ---
+function scoreVideoPackage(pkg, imageTool, videoTool, length){
+  const clamp = (n) => Math.max(0, Math.min(100, Math.round(n)));
+  const flags = [];
+
+  let hookScore = 100;
+  const hook = (pkg.hook || '').trim();
+  const hookWords = hook.split(/\s+/).filter(Boolean).length;
+  const badHookRegex = /^(welcome|hey|today we|in this video|hello|let's|hi guys|in this shorts|are you ready)/i;
+  const strongHookRegex = /^(nobody|no one|this is why|stop|the reason|here's why|the truth|you're doing|what if|why does|the one thing|scientists|it turns out|i tried|this changed)/i;
+  if (badHookRegex.test(hook)) { hookScore -= 45; flags.push('Hook: generic intro cliché detected — biggest single score hit.'); }
+  if (hookWords > 15) { hookScore -= 20; flags.push(`Hook: ${hookWords} words — trim toward 8-12 for a sub-2-second read.`); }
+  else if (hookWords > 12) { hookScore -= 8; flags.push(`Hook: ${hookWords} words — a bit long.`); }
+  if (!strongHookRegex.test(hook) && !/[?!]/.test(hook)) { hookScore -= 15; flags.push('Hook: no clear pattern-interrupt or curiosity-gap structure detected.'); }
+  hookScore = clamp(hookScore);
+
+  let pacingScore = 100;
+  const scenes = pkg.storyboard || [];
+  let overSceneCount = 0;
+  scenes.forEach((s) => {
+    const m = (s.duration || '').match(/(\d+)/);
+    if (m) {
+      const sec = parseInt(m[1], 10);
+      if (sec > 5) overSceneCount++;
+      else if (sec > 4) pacingScore -= 2;
+    }
+  });
+  if (overSceneCount > 0) { pacingScore -= Math.min(40, overSceneCount * 12); flags.push(`Pacing: ${overSceneCount} scene(s) exceed 5s.`); }
+  const overlayCount = scenes.filter(s => s.on_screen_text && s.on_screen_text.trim() !== '').length;
+  const overlayRatio = scenes.length ? overlayCount / scenes.length : 0;
+  if (overlayRatio < 0.7) { pacingScore -= Math.round((0.7 - overlayRatio) * 100); flags.push(`Pacing: only ${Math.round(overlayRatio * 100)}% of scenes have overlays (target 70%+).`); }
+  const longOverlays = scenes.filter(s => s.on_screen_text && s.on_screen_text.split(/\s+/).filter(Boolean).length > 6).length;
+  if (longOverlays > 0) { pacingScore -= longOverlays * 5; flags.push(`Pacing: ${longOverlays} overlay(s) run longer than 6 words.`); }
+  pacingScore = clamp(pacingScore);
+
+  let scriptScore = 100;
+  const scriptLines = pkg.script || [];
+  const totalWords = scriptLines.reduce((sum, s) => sum + (s.line || '').split(/\s+/).filter(Boolean).length, 0);
+  const avgWords = scriptLines.length ? totalWords / scriptLines.length : 0;
+  if (avgWords > 15) { scriptScore -= 25; flags.push(`Script: average ${avgWords.toFixed(1)} words/line — too dense.`); }
+  else if (avgWords > 12) { scriptScore -= 10; flags.push(`Script: average ${avgWords.toFixed(1)} words/line.`); }
+  let wordBudget = 120;
+  const lengthNums = String(length || '').match(/(\d+)/g);
+  if (lengthNums && lengthNums.length > 0) {
+    const maxSec = parseInt(lengthNums[lengthNums.length - 1], 10) || 40;
+    wordBudget = Math.round(maxSec * 3);
+  }
+  if (totalWords > wordBudget * 1.15) { scriptScore -= 20; flags.push(`Script: ${totalWords} words over budget for ${length}.`); }
+  scriptScore = clamp(scriptScore);
+
+  let promptScore = 100;
+  const prompts = pkg.prompts || [];
+  const qualityKeywords = /close-up|close up|macro|dolly|zoom|pan|tilt|static|handheld|cinematic|lighting|depth of field|studio lighting|moody|realistic|detailed|tracking|angle|movement/i;
+  let thinCount = 0, noKwCount = 0, misalignedMj = 0;
+  prompts.forEach((p) => {
+    const imgLen = (p.image_prompt || '').length, vidLen = (p.video_prompt || '').length;
+    if (imgLen < 50 || vidLen < 50) thinCount++;
+    if (!qualityKeywords.test(p.image_prompt || '') && !qualityKeywords.test(p.video_prompt || '')) noKwCount++;
+    if (imageTool === 'midjourney' && !(p.image_prompt || '').includes('--ar')) misalignedMj++;
+  });
+  if (thinCount > 0) { promptScore -= Math.min(40, thinCount * 10); flags.push(`Prompts: ${thinCount} scene(s) under 50 chars.`); }
+  if (noKwCount > 0) { promptScore -= Math.min(30, noKwCount * 8); flags.push(`Prompts: ${noKwCount} scene(s) missing camera/lighting keywords.`); }
+  if (misalignedMj > 0) { promptScore -= Math.min(20, misalignedMj * 10); flags.push(`Prompts: ${misalignedMj} scene(s) missing Midjourney '--ar'.`); }
+  if (!pkg.visual_bible) { promptScore -= 15; flags.push('Consistency: no visual_bible found — scenes risk looking like unrelated images.'); }
+  const noContinuity = prompts.filter(p => !p.continuity_note || !String(p.continuity_note).trim()).length;
+  if (noContinuity > 0) { promptScore -= Math.min(20, noContinuity * 6); flags.push(`Consistency: ${noContinuity} scene(s) missing a continuity_note.`); }
+  // Penalize duplicate/near-identical prompts across scenes
+  const promptTexts = prompts.map(p => (p.image_prompt || '').toLowerCase().replace(/\s+/g, ' ').trim()).filter(Boolean);
+  if (promptTexts.length > 1) {
+    const uniqueCount = new Set(promptTexts).size;
+    if (uniqueCount < promptTexts.length * 0.6) {
+      const dupes = promptTexts.length - uniqueCount;
+      promptScore -= Math.min(25, dupes * 5);
+      flags.push(`Prompts: ${dupes} scene(s) have near-identical prompts — add per-shot variety.`);
+    }
+  }
+  promptScore = clamp(promptScore);
+
+  let growthScore = 100;
+  const growthKeywords = /\b(follow\s+(for|to|@|my)|save\s+(this|for|the|my)|comment\s+(below|your|what|and|to)|drop\s+(a|your)\s+comment|let\s+me\s+know\s+(your|in|what)|share\s+(this|the|with)|part\s+2|what\s+do\s+you\s+think|which\s+one\s+(should|would|do|is)|tell\s+me\s+(in|what|your))\b/i;
+  const salesyCTARegex = /subscribe to my channel|visit my website|buy my product|link in bio/i;
+  const hasGrowthCTA = growthKeywords.test(pkg.caption || '') || scriptLines.some(s => growthKeywords.test(s.line || ''));
+  if (!hasGrowthCTA) { growthScore -= 45; flags.push('Growth: no comment/save/follow/share trigger found.'); }
+  if (salesyCTARegex.test(pkg.caption || '') || scriptLines.some(s => salesyCTARegex.test(s.line || ''))) { growthScore -= 35; flags.push('Growth: generic sales/subscribe language detected.'); }
+  const hashtagCount = Array.isArray(pkg.hashtags) ? pkg.hashtags.length : 0;
+  if (hashtagCount < 3) { growthScore -= 15; flags.push(`Growth: only ${hashtagCount} hashtag(s).`); }
+  growthScore = clamp(growthScore);
+
+  let structureScore = 100;
+  const sbCount = scenes.length, prCount = prompts.length;
+  if (sbCount !== prCount) { structureScore -= 40; flags.push(`Structure: storyboard has ${sbCount} scenes but prompts has ${prCount}.`); }
+  if (sbCount < 6) { structureScore -= 20; flags.push(`Structure: only ${sbCount} scenes — storyboard poster needs at least 6 panels.`); }
+  const missingTitles = scenes.filter(s => !s.title || !s.title.trim()).length;
+  if (missingTitles > 0) { structureScore -= Math.min(20, missingTitles * 5); flags.push(`Structure: ${missingTitles} scene(s) missing a title.`); }
+  const placeholderRegex = /TODO|\[\s*insert|<\s*insert|placeholder|lorem\s+ipsum|fill\s+in/i;
+  if (placeholderRegex.test(pkg.title || '') || placeholderRegex.test(hook) || placeholderRegex.test(pkg.caption || '')) { structureScore -= 50; flags.push('Structure: placeholder text detected.'); }
+  structureScore = clamp(structureScore);
+
+  const weights = { hook: 0.20, pacing: 0.20, script: 0.15, prompts: 0.20, growth: 0.15, structure: 0.10 };
+  const scores = { hook: hookScore, pacing: pacingScore, script: scriptScore, prompts: promptScore, growth: growthScore, structure: structureScore };
+  const overall = clamp(Object.keys(weights).reduce((sum, k) => sum + scores[k] * weights[k], 0));
+
+  let grade;
+  if (overall >= 90) grade = 'Excellent — high virality readiness';
+  else if (overall >= 75) grade = 'Strong — minor polish only';
+  else if (overall >= 60) grade = 'Workable — noticeable weak spots';
+  else grade = 'Weak — regenerate recommended';
+
+  return { scores, weights, overall, grade, flags };
+}
+
+// Safety net: if the model forgets to lock/reuse the visual_bible wording in every
+// scene prompt, patch it in programmatically so scenes don't drift visually even
+// when the LLM output is imperfect. Never touches Midjourney's trailing --params.
+function enforceVisualConsistency(pkg, imageTool){
+  if(!pkg || !Array.isArray(pkg.prompts)) return pkg;
+
+  if(!pkg.visual_bible || typeof pkg.visual_bible !== 'object'){
+    const firstVisual = (pkg.storyboard && pkg.storyboard[0] && pkg.storyboard[0].visual) || '';
+    pkg.visual_bible = {
+      subject: firstVisual.slice(0, 80) || 'consistent recurring subject across all scenes',
+      setting: 'consistent environment established in scene 1',
+      palette: 'consistent color palette established in scene 1',
+      lighting: 'consistent lighting mood established in scene 1',
+      lens_style: 'consistent camera/lens treatment established in scene 1',
+      motif: 'a recurring visual element tying scenes together'
+    };
+  }
+
+  const bible = pkg.visual_bible;
+  const anchorPhrases = [bible.palette, bible.lighting, bible.lens_style]
+    .filter(Boolean)
+    .map(s => String(s).split(',')[0].trim())
+    .filter(s => s.length > 3);
+
+  pkg.prompts.forEach((p, idx) => {
+    if(!p.continuity_note || typeof p.continuity_note !== 'string' || !p.continuity_note.trim()){
+      p.continuity_note = idx === 0
+        ? 'Establishes the locked subject, setting, palette, and lighting used for the rest of the video.'
+        : `Continues directly from Scene ${idx}: same subject, setting, palette, and lighting carry over; only the camera/action changes.`;
+    }
+
+    ['image_prompt', 'video_prompt'].forEach(field => {
+      const original = p[field];
+      if(!original || typeof original !== 'string') return;
+      const lower = original.toLowerCase();
+      const missing = anchorPhrases.filter(ph => !lower.includes(ph.toLowerCase()));
+      if(missing.length === 0) return;
+
+      if(field === 'image_prompt' && imageTool === 'midjourney'){
+        const match = original.match(/\s(--\S.*)$/);
+        if(match){
+          const params = match[1];
+          const core = original.slice(0, match.index);
+          p[field] = `${core}, ${missing.join(', ')} ${params}`;
+          return;
+        }
+      }
+      p[field] = `${original}, ${missing.join(', ')}`;
+    });
+  });
+
+  return pkg;
+}
+
+// --- In-app activity logs (session-only, shown in the Logs tab) ---
+const appLogs = [];
+const LOG_MAX = 300;
+
+function addLog(level, message, detail){
+  appLogs.unshift({ ts: Date.now(), level, message, detail: detail || '' });
+  if(appLogs.length > LOG_MAX) appLogs.length = LOG_MAX;
+  renderLogs();
+}
+
+function renderLogs(){
+  const list = document.getElementById('log-list');
+  const count = document.getElementById('logCount');
+  if(!list) return;
+  if(count) count.textContent = appLogs.length ? appLogs.length : '';
+  if(appLogs.length === 0){
+    list.innerHTML = '<div class="lib-empty">No activity yet. Generate a video package to see logs here.</div>';
+    return;
+  }
+  list.innerHTML = appLogs.map(l => `
+    <div class="log-item log-${esc(l.level)}">
+      <div class="log-item-head">
+        <span class="log-item-msg">${esc(l.message)}</span>
+        <span class="log-item-time">${new Date(l.ts).toLocaleTimeString()}</span>
+      </div>
+      ${l.detail ? `<div class="log-item-detail">${esc(l.detail)}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+function logsAsText(){
+  return appLogs.slice().reverse().map(l =>
+    `[${new Date(l.ts).toLocaleString()}] ${l.level.toUpperCase()} - ${l.message}${l.detail ? '\n  ' + l.detail.replace(/\n/g, '\n  ') : ''}`
+  ).join('\n');
+}
+
+function initLogsPanel(){
+  const copyBtn = document.getElementById('copyLogsBtn');
+  const clearBtn = document.getElementById('clearLogsBtn');
+  if(copyBtn) copyBtn.addEventListener('click', () => copyText(logsAsText() || 'No logs yet.', copyBtn));
+  if(clearBtn) clearBtn.addEventListener('click', () => { appLogs.length = 0; renderLogs(); });
+  renderLogs();
+}
+
+function buildSystemPrompt(visualstyle, activeEntry, niche, imageTool, videoTool){
+  const base = `You are an elite short-form video strategist. You've studied thousands of top-performing YouTube Shorts/TikTok/Reels and know exactly what separates a video that gets 50 views from one that gets 5 million. You write scripts, storyboards, and AI image/video generation prompts for faceless content, for ANY niche.
+
+Respond with ONLY valid JSON, no markdown fences, no preamble, matching exactly this schema:
+{
+  "title": "short punchy working title",
+  "hook": "the first line/hook, designed to stop the scroll in under 2 seconds",
+  "visual_bible": { "subject": "the one consistent on-screen subject/object/character across the whole video, or 'none - abstract/object b-roll' if there isn't one", "setting": "the one consistent environment/location style used all the way through", "palette": "3-4 locked color descriptors reused in every scene (e.g. 'warm amber, deep navy, muted gold')", "lighting": "one locked lighting setup/mood reused in every scene (e.g. 'low-key single-source side light')", "lens_style": "one locked camera/lens treatment reused in every scene (e.g. '35mm, shallow depth of field, slight film grain')", "motif": "one recurring visual object, texture, or graphic element that reappears across scenes to visually tie them together" },
+  "script": [ { "time": "0-3s", "line": "spoken/voiceover line", "note": "short delivery/visual direction note" } ],
+  "storyboard": [ { "scene": 1, "duration": "3s", "visual": "detailed description of what's on screen (no human faces/talking heads - faceless style: b-roll, animation, text, stock-style footage, close-ups of objects/hands, motion graphics etc)", "on_screen_text": "overlay text or empty string", "camera": "shot type e.g. close-up, top-down, slow zoom" } ],
+  "prompts": [ { "scene": 1, "image_prompt": "a single detailed prompt for an AI image generator (Midjourney/DALL-E style) matching the chosen visual style AND literally restating the visual_bible's subject/palette/lighting/lens wording", "video_prompt": "a single detailed prompt for an AI video generator (Runway/Kling/Sora style), including camera movement and duration, written as a continuation of the previous scene's shot", "continuity_note": "one sentence stating exactly what carries over unchanged from the previous scene (subject, setting, lighting, palette) and what is new in this scene (camera move/action/detail) - for scene 1, state how it establishes the visual_bible" } ],
+  "caption": "a ready-to-post caption with a hook line and soft CTA",
+  "hashtags": ["5-8 relevant hashtags without the # symbol"]
+}
+
+VIRALITY & RETENTION FRAMEWORK (apply every one of these, every time):
+1. HOOK: 6-12 words, opens with a contrarian claim, curiosity gap, surprising stat, or direct callout — never a greeting or "in this video." Creates an OPEN LOOP that the final script line must explicitly resolve.
+2. PACING & PATTERN INTERRUPTS: every scene 2-5s (hard cap 5s), varied durations, and the visual/angle/element changes on every single cut — never two static beats in a row. Each scene escalates the stakes or curiosity versus the last.
+3. TEXT OVERLAYS: at least 80% of scenes carry a 1-6 word overlay that punches up the line's key word — never a verbatim copy of the spoken line.
+4. SCRIPT DELIVERY: short declarative lines, average under 12 words. Cut filler ("basically," "so," "actually").
+5. PAYOFF: the last line must resolve the hook's open loop explicitly — the viewer should feel "there it is."
+6. PROMPT QUALITY: every image_prompt/video_prompt is 15-30 words of concrete visual language — a camera move, a lighting descriptor, a composition note. No vague prompts.
+7. GROWTH CTA: caption or final line ends with ONE native trigger (comment-bait question, "save this," "follow for part 2") — never salesy language ("subscribe," "link in bio").
+8. STRUCTURE: storyboard/prompts align 1:1 by scene number, no placeholders, no real people or copyrighted brands. Visual style to weave into every prompt: "${visualstyle}".
+9. VISUAL CONTINUITY (CRITICAL — this must look like one continuous film, never a slideshow of unrelated images): before writing any prompts, lock the visual_bible fields (subject, setting, palette, lighting, lens_style, motif) and DO NOT change them for the rest of the video. Every single image_prompt and video_prompt must literally reuse that same locked wording (not a paraphrase, not "similar style" — the same descriptor phrases) alongside the scene-specific action, so a reader could tell every scene came from the same shoot. Never introduce a new subject, new color palette, new lighting mood, or new location outside what the bible defines. Write each video_prompt as if the camera is continuing from where the previous scene's shot ended (matching camera position/direction/action), not starting cold. Fill continuity_note for every scene explaining exactly what's carried over and what's new.
+
+PROMPT FORMATTING:
+- ${IMAGE_TOOL_NOTES[imageTool] || IMAGE_TOOL_NOTES.generic}
+- ${VIDEO_TOOL_NOTES[videoTool] || VIDEO_TOOL_NOTES.generic}
+
+CROSS-SCENE PRODUCTION WORKFLOW (mention this is how the person should actually generate the media, not just the text prompts): ${IMAGE_TOOL_CHAINING[imageTool] || IMAGE_TOOL_CHAINING.generic} For video: ${VIDEO_TOOL_CHAINING[videoTool] || VIDEO_TOOL_CHAINING.generic}`;
+
+  let nicheBlock = '';
+  if(niche){
+    nicheBlock = `
+NICHE LOCK — the content MUST stay strictly inside this niche category. Do not drift into unrelated topics even if they seem viral-adjacent.
+- Niche: ${niche.label}
+- Niche scope: ${niche.hint}`;
+  }
+
+  let guideBlock;
+  if(activeEntry){
+    const g = activeEntry.guide;
+    guideBlock = `
+NICHE PLAYBOOK — this niche has a saved workflow. Follow it as the primary creative guide, overriding the generic defaults below where they conflict, but never break the JSON schema above.
+- Niche: ${activeEntry.name}
+- Hook style: ${g.hook_style}
+- Script structure: ${g.script_structure}
+- Tone defaults: ${g.tone_defaults}
+- Visual style defaults: ${g.visual_style_defaults}
+- Storyboard rules: ${g.storyboard_rules}
+- Prompt style: ${g.prompt_style}
+- CTA style: ${g.cta_style}
+- Hashtag strategy: ${g.hashtag_strategy}
+- Pacing notes: ${g.pacing_notes}
+- Extra rules: ${g.extra_rules}`;
+  } else {
+    guideBlock = `
+VIRALITY & ENGAGEMENT PLAYBOOK — no custom workflow selected, so apply this by default:
+- Hook (0-1.5s): open on a pattern interrupt, a bold/contrarian claim, or a curiosity gap. Never a slow intro, greeting, or throat-clearing.
+- Open loop: raise a question or tension in the hook and delay the full payoff until near the end, so viewers keep watching to close the loop.
+- Retention: re-hook every 3-5 seconds with a micro pattern-interrupt - a new visual, a new fact, a tonal beat, or on-screen text - never let a single idea stretch flat for more than ~5 seconds.
+- Sentence length: short, punchy, spoken-language lines, generally under 12 words each. Cut every filler word.
+- On-screen text: reinforces (doesn't just repeat) the spoken line at key beats - especially the hook and the payoff.
+- Pacing: roughly one cut every 2-4 seconds; vary shot type/angle scene to scene so nothing feels static.
+- CTA: soft and native-feeling - "follow for part 2", a comment prompt, "save this" - never salesy or generic ("like and subscribe").
+- Prompts: concrete, sensory visual language over abstract description; lock one subject/setting/palette/lighting/lens combo in the visual_bible and repeat that exact wording in every single scene prompt so the finished video reads as one continuous shoot, not a slideshow of disconnected images.
+- Caption: a scroll-stopping first line that still works if hashtags get cut off; 5-8 hashtags mixing broad reach + niche-specific.`;
+  }
+  return base + nicheBlock + '\n' + guideBlock;
+}
+async function generate(){
+  const topic = document.getElementById('topic').value.trim();
+  const nicheId = document.getElementById('nicheCategory').value;
+  const niche = nicheId ? NICHE_LIST.find(n=>n.id === nicheId) : null;
+  const length = document.getElementById('length').value;
+  const tone = document.getElementById('tone').value;
+  const visualstyle = document.getElementById('visualstyle').value.trim() || 'cinematic realism';
+  const imageTool = document.getElementById('imageTool').value;
+  const videoTool = document.getElementById('videoTool').value;
+  const extra = document.getElementById('extra').value.trim();
+  const btn = document.getElementById('goBtn');
+  const status = document.getElementById('status');
+  const output = document.getElementById('output');
+
+  if(!topic && !niche){
+    status.innerHTML = '<span class="err">Pick a niche category or enter a topic first.</span>';
+    return;
+  }
+
+  if(!IN_CLAUDE && !getRouterUrl()){
+    status.innerHTML = '<span class="err">Start the secure provider router first: node secure-provider-server.js</span>';
+    return;
+  }
+
+  const workflowId = document.getElementById('workflowSelect').value;
+  const activeEntry = workflowId ? libraryCache.find(e=>e.id === workflowId) : null;
+
+  window.__generating = true;
+  btn.disabled = true;
+  const pw = document.getElementById('progressWrap');
+  const pb = document.getElementById('progressBar');
+  const pl = document.getElementById('progressLabel');
+  function showProgress(pct, label){
+    if(pw) pw.style.display = '';
+    if(pb) pb.style.width = pct + '%';
+    if(pl) pl.textContent = label;
+  }
+  status.innerHTML = `<i data-lucide="loader-2" class="spin" style="width:14px; height:14px; vertical-align:middle; margin-right:6px; display:inline-block;"></i> Starting generation...`;
+  lucide.createIcons();
+  output.innerHTML = '';
+  showProgress(5, 'Preparing request...');
+
+  saveFormState();
+  showProgress(10, 'Calling LLM provider...');
+
+  const sys = buildSystemPrompt(visualstyle, activeEntry, niche, imageTool, videoTool);
+
+  const userMsg = `${niche ? `Niche category: ${niche.label} (stay strictly within this niche)` : ''}
+${topic ? `Topic/angle: ${topic}` : (niche ? 'No specific topic given - pick a strong, high-potential topic within the niche above.' : '')}
+Target length: ${length}
+Tone: ${tone}
+${extra ? 'Additional requirements: ' + extra : ''}`;
+
+  try{
+    const genStart = Date.now();
+    addLog('info', `Generation started: "${topic || (niche ? niche.label : 'untitled')}"`, `Length: ${length} | Tone: ${tone} | Image tool: ${imageTool} | Video tool: ${videoTool}${activeEntry ? ' | Playbook: ' + activeEntry.name : ''}`);
+    // Streaming mode: use SSE endpoint for real-time output
+    const streamOut = document.getElementById('stream-output');
+    const streamContent = document.getElementById('stream-content');
+    if (!IN_CLAUDE && streamOut && streamContent) {
+      output.innerHTML = '';
+      streamOut.style.display = '';
+      const timerEl = document.getElementById('stream-timer');
+      const timerInterval = setInterval(() => {
+        if (timerEl) {
+          const elapsed = Math.floor((Date.now() - genStart) / 1000);
+          timerEl.textContent = `LIVE — ${elapsed}s elapsed`;
+        }
+      }, 1000);
+      streamContent.textContent = '';
+      showProgress(15, 'Connecting to provider...');
+
+      let pkg = null, qa = null, providerInfo = null, lastIssue = '';
+      const QUALITY_RETRY_THRESHOLD = 70;
+      const maxAttempts = 1;
+      let streamAttempt = 0;
+      let streamOk = false;
+
+      while (streamAttempt < maxAttempts && !streamOk) {
+        streamAttempt++;
+        const activeSys = streamAttempt === 1 ? sys : `${sys}\n\nIMPORTANT: Your previous output needs correction:\n${lastIssue || 'Fix validation errors and return ONLY valid JSON.'}\n\nFix these specific issues, keep scene numbers aligned 1:1, and return ONLY valid JSON.`;
+        addLog('info', `Attempt ${streamAttempt}/${maxAttempts}: streaming from model...`);
+        showProgress(15 + streamAttempt * 10, streamAttempt === 1 ? 'Streaming model response...' : 'Retrying with corrections...');
+        streamContent.textContent = '';
+
+        try {
+          for await (const event of callModelStream(activeSys, userMsg, 8000)) {
+            if (event.type === 'provider') {
+              addLog('info', `Provider: ${event.id} (${event.model})`);
+            } else if (event.type === 'chunk') {
+              streamContent.textContent += event.text;
+              streamOut.scrollTop = streamOut.scrollHeight;
+              showProgress(15 + streamAttempt * 10 + 20, 'Receiving...');
+            } else if (event.type === 'result') {
+              pkg = event.content;
+              pkg = enforceVisualConsistency(pkg, imageTool);
+              qa = scoreVideoPackage(pkg, imageTool, videoTool, length);
+              addLog(qa.overall >= QUALITY_RETRY_THRESHOLD ? 'success' : 'warn',
+                `Attempt ${streamAttempt}: QA score ${qa.overall}/100 (${qa.grade})`,
+                qa.flags && qa.flags.length ? qa.flags.join('\n') : 'No flags — clean pass.');
+
+              if (qa.overall >= QUALITY_RETRY_THRESHOLD || streamAttempt === maxAttempts) {
+                streamOk = true;
+                break;
+              }
+              lastIssue = qa.flags.map(f => `- ${f}`).join('\n') || '- Overall quality score below target.';
+              addLog('info', `Retrying: score below ${QUALITY_RETRY_THRESHOLD} threshold`);
+            } else if (event.type === 'error') {
+              throw new Error(event.message);
+            }
+          }
+        } catch (apiErr) {
+          addLog('error', `Attempt ${streamAttempt}: stream failed`, apiErr.message || String(apiErr));
+          if (streamAttempt >= maxAttempts) throw apiErr;
+          lastIssue = `- Generation or JSON parsing failed: ${apiErr.message}`;
+        }
+      }
+
+      if (!pkg || !qa) throw new Error('No valid package received from stream.');
+
+      clearInterval(timerInterval);
+      if (qa.overall < QUALITY_RETRY_THRESHOLD) {
+        const timerEl = document.getElementById('stream-timer');
+        if (timerEl) { timerEl.textContent = '\u26A0 QA SCORE ' + qa.overall + '/100 \u2014 OUTPUT MAY BE INCOMPLETE'; timerEl.style.color = '#ffc107'; }
+        streamContent.textContent += '\n\n\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\u26A0 QA SCORE ' + qa.overall + '/100 \u2014 accepted at max attempts but may be incomplete.\nFlags: ' + (qa.flags||[]).join(' | ') + '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n';
+        streamOut.scrollTop = streamOut.scrollHeight;
+      }
+      streamOut.style.display = 'none';
+      const elapsed = ((Date.now() - genStart) / 1000).toFixed(1);
+      showProgress(90, 'Rendering result...');
+      pkg.qa = qa;
+      pkg.imageTool = imageTool;
+      pkg.videoTool = videoTool;
+      render(pkg);
+      saveLastOutput(pkg);
+      showProgress(100, 'Complete');
+      setTimeout(() => { if(pw) pw.style.display = 'none'; }, 2000);
+      status.innerHTML = qa.overall < QUALITY_RETRY_THRESHOLD
+        ? '<span><i data-lucide="alert-triangle" style="width:14px; height:14px; color:#ffc107; vertical-align:middle; margin-right:6px;"></i>Done — low quality (' + qa.overall + '/100).</span>'
+        : '<span><i data-lucide="check-circle" style="width:14px; height:14px; color:var(--success); vertical-align:middle; margin-right:6px;"></i>Done.</span>';
+      lucide.createIcons();
+      addLog('success', `Generation complete: "${pkg.title || topic}"`, `Elapsed: ${elapsed}s | QA score: ${qa.overall}/100 (${qa.grade})`);
+      const entry = { ts: Date.now(), topic: topic || (niche ? `[${niche.label}] auto-topic` : ''), length, tone, visualstyle, pkg };
+      await saveToHistory(entry);
+      await loadHistory();
+    } else {
+      // Non-streaming fallback (IN_CLAUDE or missing stream panel)
+      showProgress(25, 'Generating JSON package (may take 30-90s)...');
+      const QUALITY_RETRY_THRESHOLD = 70;
+      const maxAttempts = 1;
+      let pkg = null, qa = null, lastIssue = '';
+
+      for(let attempt = 1; attempt <= maxAttempts; attempt++){
+        showProgress(25 + attempt * 10, attempt === 1 ? 'Generating JSON package...' : 'Refining weak spots (attempt 2)...');
+        addLog('info', `Attempt ${attempt}/${maxAttempts}: calling model...`);
+        const activeSys = attempt === 1 ? sys : `${sys}\n\nIMPORTANT: Your previous output needs correction:\n${lastIssue}\n\nFix these specific issues, keep scene numbers aligned 1:1, and return ONLY valid JSON.`;
+
+        let raw;
+        try{
+          raw = await callModel(activeSys, userMsg, 8000);
+        }catch(apiErr){
+          addLog('error', `Attempt ${attempt}: model/API call failed`, apiErr.message || String(apiErr));
+          throw apiErr;
+        }
+
+        const clean = raw.replace(/```json|```/g, '').trim();
+        try{
+          pkg = JSON.parse(clean);
+        }catch(parseErr){
+          addLog('error', `Attempt ${attempt}: JSON parse failed`, `${parseErr.message}\nRaw start: ${clean.slice(0, 200)}...`);
+          throw parseErr;
+        }
+        pkg = enforceVisualConsistency(pkg, imageTool);
+
+        qa = scoreVideoPackage(pkg, imageTool, videoTool, length);
+        addLog(qa.overall >= QUALITY_RETRY_THRESHOLD ? 'success' : 'warn',
+          `Attempt ${attempt}: QA score ${qa.overall}/100 (${qa.grade})`,
+          qa.flags && qa.flags.length ? qa.flags.join('\n') : 'No flags — clean pass.');
+
+        if(qa.overall >= QUALITY_RETRY_THRESHOLD || attempt === maxAttempts) break;
+        lastIssue = qa.flags.map(f => `- ${f}`).join('\n') || '- Overall quality score below target.';
+        addLog('info', `Retrying: score below ${QUALITY_RETRY_THRESHOLD} threshold`);
+      }
+
+      showProgress(90, 'Rendering result...');
+      pkg.qa = qa;
+      pkg.imageTool = imageTool;
+      pkg.videoTool = videoTool;
+      render(pkg);
+      saveLastOutput(pkg);
+      showProgress(100, 'Complete');
+      setTimeout(() => { if(pw) pw.style.display = 'none'; }, 2000);
+      status.innerHTML = qa.overall < QUALITY_RETRY_THRESHOLD
+        ? '<span><i data-lucide="alert-triangle" style="width:14px; height:14px; color:#ffc107; vertical-align:middle; margin-right:6px;"></i>Done — low quality (' + qa.overall + '/100).</span>'
+        : '<span><i data-lucide="check-circle" style="width:14px; height:14px; color:var(--success); vertical-align:middle; margin-right:6px;"></i>Done.</span>';
+      lucide.createIcons();
+      const elapsed = ((Date.now() - genStart) / 1000).toFixed(1);
+      addLog('success', `Generation complete: "${pkg.title || topic}"`, `Elapsed: ${elapsed}s | QA score: ${qa.overall}/100 (${qa.grade})`);
+      await saveToHistory(entry);
+      await loadHistory();
+    }
+  }catch(e){
+    const elapsed = ((Date.now() - genStart) / 1000).toFixed(1);
+    const so = document.getElementById('stream-output'); if(so) so.style.display = 'none';
+    showProgress(0, 'Failed');
+    if(pw) pw.style.display = 'none';
+    console.error(e);
+    const rawMsg = e.message || String(e);
+    const isRouterIssue = !IN_CLAUDE && /Router|provider|configured|not configured|401|authentication|Forbidden|Codex|API error/i.test(rawMsg);
+    const msg = isRouterIssue
+      ? 'Router/provider issue. Check the selected provider and .env settings.'
+      : 'Something went wrong generating this. Try again.';
+    status.innerHTML = `<span class="err"><i data-lucide="alert-triangle" style="width:14px; height:14px; vertical-align:middle; margin-right:6px;"></i>${msg}</span><br><small style="margin-left:20px;">${esc(rawMsg).slice(0, 900)}</small>`;
+    lucide.createIcons();
+    addLog('error', 'Generation failed', `Elapsed: ${elapsed}s | ${rawMsg.slice(0, 900)}`);
+  }finally{
+    window.__generating = false;
+    btn.disabled = false;
+  }
+}
+
+function render(pkg){
+  const output = document.getElementById('output');
+  const imageTool = pkg.imageTool || document.getElementById('imageTool')?.value || 'generic';
+  const videoTool = pkg.videoTool || document.getElementById('videoTool')?.value || 'generic';
+  const bible = pkg.visual_bible || null;
+
+  const scriptText = (pkg.script || []).map(s => `[${s.time}] ${s.line}`).join('\n');
+  const storyboardText = (pkg.storyboard || []).map(s => `Scene ${s.scene} (${s.duration}) — ${s.camera}\n${s.visual}${s.on_screen_text ? '\nON-SCREEN: ' + s.on_screen_text : ''}`).join('\n\n');
+  const bibleHeader = bible ? `VISUAL BIBLE (reuse this exact wording in every scene):\nSubject: ${bible.subject}\nSetting: ${bible.setting}\nPalette: ${bible.palette}\nLighting: ${bible.lighting}\nLens/camera: ${bible.lens_style}\nRecurring motif: ${bible.motif}\n\n` : '';
+  const promptsText = bibleHeader + (pkg.prompts || []).map(p => `Scene ${p.scene}\nIMAGE: ${p.image_prompt}\nVIDEO: ${p.video_prompt}${p.continuity_note ? '\nCONTINUITY: ' + p.continuity_note : ''}`).join('\n\n');
+  const captionText = `${pkg.caption || ''}\n\n${(pkg.hashtags||[]).map(h=>'#'+h).join(' ')}`;
+
+  let html = '';
+
+  // QA warning banner when score below threshold — accepted due to maxAttempts=1
+  if (pkg.qa && pkg.qa.overall < 70) {
+    html += `
+      <div style="margin-bottom:12px; padding:12px 16px; background:rgba(255,193,7,0.12); border:1px solid rgba(255,193,7,0.4); border-radius:10px;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+          <span style="font-size:18px;">&#9888;</span>
+          <strong style="color:#ffc107;">QA Score ${pkg.qa.overall}/100 — Output May Be Incomplete</strong>
+        </div>
+        <div style="font-size:12px; color:var(--text-muted); line-height:1.5;">${(pkg.qa.flags || []).map(f => esc(f)).join('<br>') || 'No specific flags.'}</div>
+        <div style="margin-top:8px; font-size:11px; color:var(--text-muted);">Try regenerating with a different niche, length, or visual style. The model may have produced incomplete JSON.</div>
+      </div>`;
+  }
+
+  // Output Container Header
+  html += `
+    <div class="output-workspace">
+      <div class="output-header">
+        <div class="output-kicker">Package Generated Successfully</div>
+        <h2 class="output-title">${esc(pkg.title)}</h2>
+        <div class="output-hook-card">
+          <div class="hook-label"><i data-lucide="zap" style="width:14px; height:14px;"></i> Scroll-Stopping Hook</div>
+          <div class="hook-text">"${esc(pkg.hook)}"</div>
+        </div>
+      </div>
+  `;
+
+  if(bible){
+    html += `
+      <div class="output-hook-card" style="margin-top:12px;">
+        <div class="hook-label"><i data-lucide="film" style="width:14px; height:14px;"></i> Visual Bible — reuse this exact wording in every scene</div>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:10px; margin-top:8px; font-size:13px; line-height:1.5;">
+          <div><strong>Subject:</strong> ${esc(bible.subject || '')}</div>
+          <div><strong>Setting:</strong> ${esc(bible.setting || '')}</div>
+          <div><strong>Palette:</strong> ${esc(bible.palette || '')}</div>
+          <div><strong>Lighting:</strong> ${esc(bible.lighting || '')}</div>
+          <div><strong>Lens/camera:</strong> ${esc(bible.lens_style || '')}</div>
+          <div><strong>Recurring motif:</strong> ${esc(bible.motif || '')}</div>
+        </div>
+        <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1); font-size:13px; line-height:1.5;">
+          <strong>To keep the actual generated media consistent frame-to-frame:</strong> generate scenes in order, then feed each scene's finished image forward as the reference for the next one.<br>
+          <span style="opacity:0.85;">Images — ${esc(IMAGE_TOOL_CHAINING[imageTool] || IMAGE_TOOL_CHAINING.generic)}</span><br>
+          <span style="opacity:0.85;">Video — ${esc(VIDEO_TOOL_CHAINING[videoTool] || VIDEO_TOOL_CHAINING.generic)}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  if(pkg.qa){
+    const qa = pkg.qa;
+    const gradeClass = qa.overall >= 90 ? 'qa-excellent' : qa.overall >= 75 ? 'qa-strong' : qa.overall >= 60 ? 'qa-workable' : 'qa-weak';
+    const labels = { hook: 'Hook Strength', pacing: 'Pacing & Retention', script: 'Script Delivery', prompts: 'Prompt Quality', growth: 'Growth & CTA', structure: 'Structure' };
+    html += `
+      <div class="qa-panel ${gradeClass}">
+        <div class="qa-header">
+          <div class="qa-overall">
+            <span class="qa-overall-num">${qa.overall}</span><span class="qa-overall-max">/100</span>
+          </div>
+          <div class="qa-grade">${esc(qa.grade)}</div>
+        </div>
+        <div class="qa-bars">
+          ${Object.keys(labels).map(k => `
+            <div class="qa-bar-row">
+              <span class="qa-bar-label">${labels[k]}</span>
+              <div class="qa-bar-track"><div class="qa-bar-fill" style="width:${qa.scores[k]}%"></div></div>
+              <span class="qa-bar-num">${qa.scores[k]}</span>
+            </div>
+          `).join('')}
+        </div>
+        ${qa.flags && qa.flags.length ? `
+          <div class="qa-flags">
+            <div class="qa-flags-label">Notes</div>
+            ${qa.flags.slice(0, 6).map(f => `<div class="qa-flag-item">${esc(f)}</div>`).join('')}
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }
+
+  // Script Timeline
+  html += `
+    <div class="timeline-container">
+      <div class="timeline-header">
+        <h3><i data-lucide="file-text" style="width:18px; height:18px;"></i> Script Voiceover</h3>
+        <button class="copy-btn" data-copy="script"><i data-lucide="copy" style="width:14px; height:14px;"></i> Copy Script</button>
+      </div>
+      <div class="timeline-flow">
+  `;
+  pkg.script.forEach(s => {
+    html += `
+        <div class="timeline-item">
+          <div class="timeline-time">${esc(s.time)}</div>
+          <div class="timeline-content">
+            <p class="voiceover-line">${esc(s.line)}</p>
+            ${s.note ? `<span class="director-note"><i data-lucide="message-square" style="width:12px; height:12px;"></i> ${esc(s.note)}</span>` : ''}
+          </div>
+        </div>
+    `;
+  });
+  html += `
+      </div>
+    </div>
+  `;
+
+  // Storyboard & Prompts Cards (grouped by scene)
+  html += `
+    <div class="storyboard-container">
+      <div class="storyboard-header">
+        <h3><i data-lucide="film" style="width:18px; height:18px;"></i> Storyboard & AI Prompts</h3>
+        <div class="storyboard-actions">
+          <button class="copy-btn" data-copy="storyboard"><i data-lucide="copy" style="width:14px; height:14px;"></i> Copy Storyboard</button>
+          <button class="copy-btn copy-btn-accent" data-copy="storyboardPrompt"><i data-lucide="copy" style="width:14px; height:14px;"></i> Copy Prompt</button>
+          <button class="copy-btn" data-copy="prompts"><i data-lucide="copy" style="width:14px; height:14px;"></i> Copy Prompts</button>
+        </div>
+      </div>
+      <div class="scene-grid">
+  `;
+  pkg.storyboard.forEach(s => {
+    const p = pkg.prompts.find(pr => pr.scene === s.scene) || {};
+    html += `
+        <div class="scene-card">
+          <div class="scene-card-header">
+            <span class="scene-number">Scene ${s.scene}</span>
+            <span class="scene-badge duration">${esc(s.duration)}</span>
+            <span class="scene-badge camera"><i data-lucide="video" style="width:12px; height:12px;"></i> ${esc(s.camera)}</span>
+          </div>
+          
+          <div class="scene-card-body">
+            <div class="scene-section">
+              <div class="scene-label">Visual Concept</div>
+              <div class="scene-visual-desc">${esc(s.visual)}</div>
+            </div>
+
+            ${p.continuity_note ? `
+            <div class="scene-section">
+              <div class="scene-label"><i data-lucide="link" style="width:11px; height:11px; vertical-align:middle;"></i> Continuity from previous scene</div>
+              <div class="scene-visual-desc" style="opacity:0.85; font-style:italic;">${esc(p.continuity_note)}</div>
+            </div>` : ''}
+
+            ${s.on_screen_text ? `
+            <div class="scene-section text-overlay-container">
+              <div class="scene-label">On-Screen Text Overlay</div>
+              <div class="text-overlay-preview">"${esc(s.on_screen_text)}"</div>
+            </div>` : ''}
+
+            <div class="scene-prompts">
+              <div class="prompt-group">
+                <div class="prompt-header">
+                  <span class="prompt-type-badge image-type">Image Prompt</span>
+                  <button class="prompt-copy-icon-btn" data-prompt-text="${esc(p.image_prompt)}" title="Copy Image Prompt"><i data-lucide="copy" style="width:12px; height:12px;"></i></button>
+                </div>
+                <div class="prompt-body-text">${esc(p.image_prompt)}</div>
+              </div>
+              
+              <div class="prompt-group">
+                <div class="prompt-header">
+                  <span class="prompt-type-badge video-type">Video Prompt</span>
+                  <button class="prompt-copy-icon-btn" data-prompt-text="${esc(p.video_prompt)}" title="Copy Video Prompt"><i data-lucide="copy" style="width:12px; height:12px;"></i></button>
+                </div>
+                <div class="prompt-body-text">${esc(p.video_prompt)}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+    `;
+  });
+  html += `
+      </div>
+    </div>
+  `;
+
+  // Caption & Hashtags preview
+  html += `
+    <div class="caption-container">
+      <div class="caption-header">
+        <h3><i data-lucide="share-2" style="width:18px; height:18px;"></i> Social Media Post Package</h3>
+        <button class="copy-btn" data-copy="caption"><i data-lucide="copy" style="width:14px; height:14px;"></i> Copy Caption</button>
+      </div>
+      <div class="post-preview-card">
+        <div class="post-header-mock">
+          <div class="avatar-mock"></div>
+          <div class="profile-info-mock">
+            <div class="name-mock">slate.creator</div>
+            <div class="audio-mock">Original Audio</div>
+          </div>
+        </div>
+        <div class="post-body-mock">
+          <p class="post-caption-text">${esc(pkg.caption)}</p>
+          <div class="post-tags-container">
+            ${(pkg.hashtags || []).map(h => `<span class="post-tag">#${esc(h)}</span>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  html += `</div>`; // Close output-workspace
+  output.innerHTML = html;
+
+  // Bind main copy buttons
+  const copyMap = { script: scriptText, storyboard: storyboardText, prompts: promptsText, caption: captionText };
+  output.querySelectorAll('.copy-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> copyText(copyMap[btn.dataset.copy], btn));
+  });
+
+  // Bind storyboard master prompt copy (injects title + keywords from generated package)
+  const promptBtn = output.querySelector('.copy-btn[data-copy="storyboardPrompt"]');
+  if(promptBtn){
+    const title = pkg.title || (document.getElementById('topic')?.value || '');
+    const lengthStr = pkg.length || (document.getElementById('length')?.value || '30-40 seconds');
+    const maxSec = parseInt((lengthStr.match(/(\d+)/g) || ['30']).pop(), 10) || 30;
+    const panelCount = 8;
+    const secPerPanel = (maxSec / panelCount).toFixed(1);
+    const lengthLabel = lengthStr.toUpperCase().replace(/-/g, '\u2013');
+    const lengthDesc = `${lengthStr.replace(/-/g, '\u2013')}`;
+    const keywords = (pkg.hashtags || []).slice(0, 3);
+    while(keywords.length < 3) keywords.push('...');
+    const visualStyle = document.getElementById('visualstyle')?.value?.trim() || 'cinematic realism, clean composition, high detail';
+    let promptText = STORYBOARD_MASTER_PROMPT
+      .replace(/\{ VIDEO TITLE \/ THEME \}/g, title)
+      .replace(/\[TITLE IN ENGLISH\]/g, title)
+      .replace(/\{LENGTH_LABEL\}/g, lengthLabel)
+      .replace(/\{LENGTH_DESC\}/g, lengthDesc)
+      .replace(/\{SECONDS_PER_PANEL\}/g, secPerPanel)
+      .replace(/\{VISUAL_STYLE\}/g, visualStyle)
+      .replace(/\[KEYWORD 1\]/g, keywords[0])
+      .replace(/\[KEYWORD 2\]/g, keywords[1])
+      .replace(/\[KEYWORD 3\]/g, keywords[2]);
+    promptBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      copyText(promptText, promptBtn);
+    });
+  }
+
+  // Bind inline scene prompt copy buttons
+  output.querySelectorAll('.prompt-copy-icon-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const textToCopy = btn.getAttribute('data-prompt-text');
+      try {
+        await navigator.clipboard.writeText(textToCopy);
+        btn.classList.add('copied');
+        const origIcon = btn.innerHTML;
+        btn.innerHTML = '<i data-lucide="check" style="width:12px; height:12px; color:var(--success);"></i>';
+        lucide.createIcons();
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.innerHTML = origIcon;
+          lucide.createIcons();
+        }, 1200);
+      } catch (e) {
+        console.error('Failed to copy', e);
+      }
+    });
+  });
+
+  // Re-generate Lucide icons for injected markup
+  lucide.createIcons();
+}
+</script>
+<style>
+  /* Extra support for spinning icons */
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+  .spin {
+    animation: spin 1.2s linear infinite;
+  }
+  .pulsing-dot {
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+</body>
+</html>

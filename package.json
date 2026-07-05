@@ -1,0 +1,19 @@
+{
+  "name": "faceless-content-mcp-server",
+  "version": "1.2.0",
+  "description": "Secure multi-provider MCP/server toolkit for generating faceless short-form video packages. Supports MCP sampling, Anthropic/OpenAI/OpenCode Zen/OpenCode Go/Neuralwatt/custom provider presets, and optional Codex CLI OAuth bridge.",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "faceless-content-mcp": "./index.js",
+    "faceless-content-router": "./secure-provider-server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.11.0",
+    "zod": "^3.24.0"
+  },
+  "scripts": {
+    "start:mcp": "node index.js",
+    "start:router": "node secure-provider-server.js"
+  }
+}
