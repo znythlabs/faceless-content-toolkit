@@ -276,7 +276,7 @@ function render(pkg) {
       ${kv('Core mystery', pkg.core_mystery)}
       ${kv('Survival problem', pkg.survival_problem)}
       ${kv('Payoff line', pkg.payoff_line)}
-      ${kv('Adaptation chain', (pkg.adaptation_chain || []).map(a => `${a.problem} → ${a.adaptation} → ${a.visual_proof}`).join('<br>'))}
+      ${listKV('Adaptation chain', (pkg.adaptation_chain || []).map(a => a.problem + ' → ' + a.adaptation + ' → ' + a.visual_proof))}
     </section>
 
     <section class="card">
@@ -305,14 +305,15 @@ function render(pkg) {
 
     <section class="card">
       <h3>Fact Check + Post Package</h3>
-      ${kv('Fact notes', (pkg.fact_check_notes || []).join('<br>'))}
+      ${listKV('Fact notes', pkg.fact_check_notes)}
       ${kv('Caption', pkg.caption)}
       ${kv('Hashtags', (pkg.hashtags || []).map(h => '#' + h).join(' '))}
-      ${kv('Production notes', (pkg.production_notes || []).join('<br>'))}
+      ${listKV('Production notes', pkg.production_notes)}
     </section>
   `;
 }
-function kv(k, v) { return `<div class="kv"><div class="k">${esc(k)}</div><div class="v">${v || ''}</div></div>`; }
+function kv(k, v) { return `<div class="kv"><div class="k">${esc(k)}</div><div class="v">${esc(v || '')}</div></div>`; }
+function listKV(k, arr, sep) { const items = (arr || []).map(x => esc(x)).join(sep || '<br>'); return `<div class="kv"><div class="k">${esc(k)}</div><div class="v">${items || ''}</div></div>`; }
 async function copyJSON(text) { await navigator.clipboard.writeText(text); }
 
 async function checkRouter() {
