@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Wildlife Documentary Engine</title>
+<style>
+  :root {
+    --bg: #07090e;
+    --panel: #101522;
+    --card: #151c2d;
+    --line: #263149;
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --dim: #64748b;
+    --accent: #ff9b54;
+    --accent2: #77c59b;
+    --danger: #fb7185;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans); }
+  .app { min-height: 100vh; display: grid; grid-template-columns: 390px 1fr; }
+  aside { border-right: 1px solid var(--line); background: var(--panel); padding: 22px; overflow: auto; height: 100vh; position: sticky; top: 0; }
+  main { padding: 22px; overflow: auto; }
+  h1 { margin: 0 0 6px; font-size: 22px; letter-spacing: -0.04em; }
+  h2 { margin: 22px 0 10px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+  .sub { color: var(--muted); font-size: 13px; line-height: 1.5; margin-bottom: 22px; }
+  label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin: 14px 0 7px; }
+  input, select, textarea { width: 100%; background: #080b13; color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 11px 12px; font: inherit; outline: none; }
+  textarea { min-height: 92px; resize: vertical; }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,155,84,.12); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  button { border: 0; border-radius: 999px; padding: 12px 16px; background: var(--accent); color: #1b1008; font-weight: 800; cursor: pointer; width: 100%; margin-top: 16px; }
+  button:disabled { opacity: .55; cursor: not-allowed; }
+  .secondary { background: transparent; color: var(--text); border: 1px solid var(--line); }
+  .status { font-size: 12px; color: var(--muted); margin-top: 10px; line-height: 1.45; }
+  .err { color: var(--danger); }
+  .ok { color: var(--accent2); }
+  .empty { border: 1px dashed var(--line); color: var(--dim); border-radius: 16px; padding: 48px 24px; text-align: center; }
+  .package { display: grid; gap: 16px; }
+  .hero { border: 1px solid var(--line); background: linear-gradient(135deg, rgba(255,155,84,.12), rgba(119,197,155,.06)), var(--card); border-radius: 18px; padding: 20px; }
+  .title { font-size: 30px; line-height: 1.05; letter-spacing: -0.05em; font-weight: 900; margin-bottom: 10px; }
+  .hook { color: var(--accent); font-size: 18px; font-weight: 800; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .pill { border: 1px solid var(--line); background: #090d16; color: var(--muted); border-radius: 999px; padding: 5px 9px; font-size: 12px; font-family: var(--mono); }
+  .card { border: 1px solid var(--line); background: var(--card); border-radius: 16px; padding: 16px; }
+  .card h3 { margin: 0 0 12px; font-size: 16px; }
+  .row { display: grid; gap: 8px; }
+  .kv { display: grid; grid-template-columns: 160px 1fr; gap: 12px; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,.06); }
+  .kv:last-child { border-bottom: 0; }
+  .k { color: var(--muted); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+  .v { color: var(--text); line-height: 1.5; }
+  .script-line, .scene { border-top: 1px solid rgba(255,255,255,.08); padding: 12px 0; }
+  .script-line:first-child, .scene:first-child { border-top: 0; padding-top: 0; }
+  .time { color: var(--accent); font-family: var(--mono); font-size: 12px; margin-bottom: 5px; }
+  .vo { font-size: 17px; line-height: 1.4; font-weight: 650; }
+  .note { color: var(--muted); font-size: 13px; line-height: 1.5; margin-top: 5px; }
+  .scene-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 9px; }
+  .scene-num { font-weight: 900; color: var(--text); }
+  .beat { color: var(--accent2); font-family: var(--mono); font-size: 12px; }
+  .overlay { display: inline-block; background: #f8fafc; color: #0b1020; font-weight: 900; font-size: 12px; padding: 4px 8px; border-radius: 5px; margin-top: 8px; letter-spacing: .03em; }
+  pre { white-space: pre-wrap; word-break: break-word; background: #080b13; border: 1px solid var(--line); padding: 12px; border-radius: 12px; color: #dbeafe; font-size: 12px; line-height: 1.5; margin: 8px 0 0; }
+  .actions { display: flex; gap: 8px; margin-top: 12px; }
+  .actions button { margin-top: 0; width: auto; font-size: 12px; padding: 8px 12px; }
+  .qa { display: grid; grid-template-columns: 110px 1fr; gap: 16px; align-items: start; }
+  .score { font-size: 36px; font-weight: 900; color: var(--accent); }
+  .small { color: var(--muted); font-size: 12px; }
+  ul { margin: 8px 0 0 18px; color: var(--muted); line-height: 1.55; }
+  @media (max-width: 980px) { .app { grid-template-columns: 1fr; } aside { position: static; height: auto; } .kv { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <h1>Wildlife Documentary Engine</h1>
+    <div class="sub">Dedicated niche-first generator for Cinematic Viral Wildlife Explainers. No generic presets. Built around the hook → animal reveal → survival problem → adaptation chain → visual proof → payoff structure.</div>
+
+    <label>Router URL</label>
+    <input id="router" value="http://127.0.0.1:3737" />
+
+    <label>Provider</label>
+    <select id="provider">
+      <option value="auto">Auto</option>
+      <option value="anthropic">Anthropic</option>
+      <option value="openai">OpenAI</option>
+      <option value="opencode_zen">OpenCode Zen</option>
+      <option value="opencode_go">OpenCode Go</option>
+      <option value="nine_router">9router</option>
+      <option value="neuralwatt">Neuralwatt</option>
+      <option value="codex_oauth">Codex OAuth</option>
+      <option value="custom_openai_compatible">Custom OpenAI-compatible</option>
+    </select>
+
+    <label>Animal / Topic</label>
+    <input id="animal" placeholder="e.g. harpy eagle, marine iguana, aye-aye" />
+
+    <label>Episode Type</label>
+    <select id="episodeType">
+      <option value="auto">Auto-pick strongest structure</option>
+      <option value="strange_hunting_method">Strange Hunting Method</option>
+      <option value="impossible_survival">Impossible Survival Adaptation</option>
+      <option value="silent_predator">Silent Predator Strategy</option>
+      <option value="bizarre_body_tool">Bizarre Body Tool</option>
+      <option value="extreme_evolution_trick">Extreme Evolution Trick</option>
+    </select>
+
+    <div class="grid">
+      <div>
+        <label>Length</label>
+        <select id="length">
+          <option>15-20 seconds</option>
+          <option selected>30-40 seconds</option>
+          <option>45-60 seconds</option>
+          <option>60-90 seconds</option>
+        </select>
+      </div>
+      <div>
+        <label>Image Tool</label>
+        <select id="imageTool">
+          <option value="generic">Generic</option>
+          <option value="midjourney">Midjourney</option>
+          <option value="dalle">DALL-E 3</option>
+          <option value="sd">Stable Diffusion</option>
+          <option value="seedream">SeeDream</option>
+        </select>
+      </div>
+    </div>
+
+    <label>Video Tool</label>
+    <select id="videoTool">
+      <option value="generic">Generic</option>
+      <option value="sora">Sora</option>
+      <option value="runway">Runway</option>
+      <option value="kling">Kling</option>
+      <option value="ltx">LTX Video</option>
+      <option value="luma">Dream Machine / Luma</option>
+    </select>
+
+    <label>Visual Style</label>
+    <textarea id="visualStyle">cinematic viral wildlife documentary, ultra-detailed telephoto and macro animal footage, natural habitat realism, shallow depth of field, dramatic but natural lighting, crisp bark/skin/feather texture, premium nature documentary color grade</textarea>
+
+    <label>Extra Requirements</label>
+    <textarea id="extra" placeholder="e.g. keep it safe for students, no gore, emphasize the animal's hearing..."></textarea>
+
+    <button id="generateBtn">Generate Wildlife Package</button>
+    <button class="secondary" id="checkBtn">Check Router</button>
+    <div class="status" id="status"></div>
+  </aside>
+
+  <main>
+    <div id="output" class="empty">Generate a wildlife documentary package to see the script, storyboard, prompts, and QA here.</div>
+  </main>
+</div>
+
+<script>
+const EPISODE_BEATS = {
+  auto: 'Pick the best structure based on the animal behavior.',
+  strange_hunting_method: 'impossible hunting hook → animal reveal → hidden prey problem → sensory/body adaptation → behavior in action → macro proof → capture/payoff → survival uniqueness',
+  impossible_survival: 'impossible survival hook → animal reveal → hostile habitat → first adaptation → consequence → second adaptation → weird proof → survival payoff',
+  silent_predator: 'stillness hook → predator reveal → power detail → patient behavior → prey context → sensory advantage → strike setup → inevitability payoff',
+  bizarre_body_tool: 'body-tool hook → animal reveal → survival challenge → anatomy close-up → tool mechanism → macro proof → result → evolutionary uniqueness',
+  extreme_evolution_trick: 'evolution trick hook → animal reveal → environmental pressure → adaptation → visual proof → consequence → secondary adaptation → survival statement'
+};
+
+function systemPrompt({ visualStyle, imageTool, videoTool }) {
+  return `You are the dedicated creative engine for one niche only: Cinematic Viral Wildlife Explainers.
+
+Generate short-form wildlife documentary packages with a serious, mysterious, educational tone. The style is inspired by viral premium nature explainers: impossible animal hook, quick animal reveal, survival problem, adaptation chain, macro visual proof, and a memorable final payoff.
+
+Return ONLY valid JSON. No markdown. No preamble.
+
+Required JSON schema:
+{
+  "title": "short documentary-style title",
+  "episode_type": "auto | strange_hunting_method | impossible_survival | silent_predator | bizarre_body_tool | extreme_evolution_trick",
+  "animal": "specific animal or group",
+  "core_mystery": "the impossible or strange claim",
+  "survival_problem": "the problem this animal solves",
+  "adaptation_chain": [{ "problem": "obstacle", "adaptation": "body or behavior", "visual_proof": "what viewer sees" }],
+  "hook": "6-12 word first line",
+  "payoff_line": "final spoken line that resolves the hook",
+  "visual_bible": { "subject": "locked subject", "setting": "locked habitat", "palette": "locked natural colors", "lighting": "locked natural lighting", "lens_style": "locked telephoto/macro style", "motif": "recurring texture/detail" },
+  "script": [{ "time": "0-3s", "line": "voiceover line", "note": "delivery/visual note" }],
+  "storyboard": [{ "scene": 1, "duration": "3s", "beat": "hook/reveal/problem/adaptation/proof/twist/payoff", "visual": "what is on screen", "on_screen_text": "1-6 word bottom caption", "camera": "shot type and movement" }],
+  "prompts": [{ "scene": 1, "image_prompt": "paste-ready image prompt", "video_prompt": "paste-ready video prompt", "continuity_note": "what carries over and what changes" }],
+  "fact_check_notes": ["claims that should be verified or handled carefully"],
+  "caption": "ready-to-post caption with native documentary CTA",
+  "hashtags": ["5-8 tags without #"],
+  "production_notes": ["how to keep generated media consistent"]
+}
+
+Hook style:
+- Use impossible animal claims: "This primate hunts using sound, not sight." / "This lizard is not supposed to exist." / "This bird hunts without moving."
+- Do not use greetings, jokes, "Did you know," or "In this video."
+
+Structure:
+- 30-40 seconds should use 8-10 scenes.
+- Every scene is 2-5 seconds.
+- Scene captions are white all-caps bottom text, 1-6 words.
+- Use tight close-ups, macro textures, cutaway-style proof, and natural habitat shots.
+
+Visual style to use in every prompt: ${visualStyle}
+Image tool target: ${imageTool}
+Video tool target: ${videoTool}
+
+Fact safety:
+- Do not invent animal abilities.
+- Include fact_check_notes when using obscure or absolute claims.
+- Avoid gore and keep hunting educational.
+- Do not create text/watermarks inside image or video prompts. Captions are separate.`;
+}
+
+function userMessage() {
+  const type = val('episodeType');
+  return `Animal/topic: ${val('animal') || 'Auto-pick a high-retention wildlife survival behavior'}
+Episode type: ${type} — ${EPISODE_BEATS[type] || EPISODE_BEATS.auto}
+Target length: ${val('length')}
+Additional requirements: ${val('extra') || 'None'}`;
+}
+
+function val(id) { return document.getElementById(id).value.trim(); }
+function esc(s) { const d = document.createElement('div'); d.innerText = s == null ? '' : s; return d.innerHTML; }
+
+function wordCount(s) { return String(s || '').trim().split(/\s+/).filter(Boolean).length; }
+function score(pkg) {
+  const flags = [];
+  let hook = 100, structure = 100, visuals = 100, factuality = 100;
+  if (!/\bthis\b/i.test(pkg.hook || '') && !/\b(hunts|survives|moves|dives|listens|sees|freezes|breathes)\b/i.test(pkg.hook || '')) {
+    hook -= 25; flags.push('Hook should feel like a direct impossible animal claim.');
+  }
+  if (!/without|not|isn't|shouldn't|impossible|using|instead|almost|only/i.test(pkg.hook || '')) {
+    hook -= 20; flags.push('Hook needs a stronger contradiction or curiosity gap.');
+  }
+  const scenes = pkg.storyboard || [];
+  if (val('length') === '30-40 seconds' && (scenes.length < 8 || scenes.length > 10)) {
+    structure -= 18; flags.push('30-40s episodes should usually have 8-10 scenes.');
+  }
+  const beatText = scenes.map(s => s.beat || '').join(' ').toLowerCase();
+  ['hook','reveal','problem','adaptation','proof','payoff'].forEach(b => { if (!beatText.includes(b)) { structure -= 8; flags.push(`Missing ${b} beat.`); } });
+  const promptText = (pkg.prompts || []).map(p => `${p.image_prompt} ${p.video_prompt}`).join(' ');
+  if (!/macro|telephoto|close-up|shallow depth|natural lighting|habitat|documentary/i.test(promptText)) {
+    visuals -= 25; flags.push('Prompts need stronger wildlife documentary camera/texture language.');
+  }
+  if (!pkg.fact_check_notes || !pkg.fact_check_notes.length) {
+    factuality -= 25; flags.push('Add fact_check_notes for animal behavior claims.');
+  }
+  const overall = Math.round(hook * .3 + structure * .3 + visuals * .25 + factuality * .15);
+  return { overall, scores: { hook, structure, visuals, factuality }, flags };
+}
+
+function render(pkg) {
+  const qa = score(pkg);
+  const out = document.getElementById('output');
+  out.className = 'package';
+  out.innerHTML = `
+    <section class="hero">
+      <div class="title">${esc(pkg.title)}</div>
+      <div class="hook">“${esc(pkg.hook)}”</div>
+      <div class="meta">
+        <span class="pill">${esc(pkg.episode_type)}</span>
+        <span class="pill">${esc(pkg.animal)}</span>
+        <span class="pill">QA ${qa.overall}/100</span>
+      </div>
+      <div class="actions"><button class="secondary" onclick='copyJSON(${JSON.stringify(JSON.stringify(pkg, null, 2))})'>Copy JSON</button></div>
+    </section>
+
+    <section class="card qa">
+      <div><div class="score">${qa.overall}</div><div class="small">wildlife QA</div></div>
+      <div>${qa.flags.length ? `<ul>${qa.flags.map(f => `<li>${esc(f)}</li>`).join('')}</ul>` : '<div class="ok">Strong package. No major wildlife-specific flags.</div>'}</div>
+    </section>
+
+    <section class="card">
+      <h3>Core Documentary Logic</h3>
+      ${kv('Core mystery', pkg.core_mystery)}
+      ${kv('Survival problem', pkg.survival_problem)}
+      ${kv('Payoff line', pkg.payoff_line)}
+      ${kv('Adaptation chain', (pkg.adaptation_chain || []).map(a => `${a.problem} → ${a.adaptation} → ${a.visual_proof}`).join('<br>'))}
+    </section>
+
+    <section class="card">
+      <h3>Visual Bible</h3>
+      ${Object.entries(pkg.visual_bible || {}).map(([k,v]) => kv(k.replace('_',' '), v)).join('')}
+    </section>
+
+    <section class="card">
+      <h3>Script Voiceover</h3>
+      ${(pkg.script || []).map(s => `<div class="script-line"><div class="time">${esc(s.time)}</div><div class="vo">${esc(s.line)}</div>${s.note ? `<div class="note">${esc(s.note)}</div>` : ''}</div>`).join('')}
+    </section>
+
+    <section class="card">
+      <h3>Storyboard + Prompts</h3>
+      ${(pkg.storyboard || []).map(scene => {
+        const p = (pkg.prompts || []).find(x => x.scene === scene.scene) || {};
+        return `<div class="scene">
+          <div class="scene-head"><span class="scene-num">Scene ${scene.scene}</span><span class="pill">${esc(scene.duration)}</span><span class="beat">${esc(scene.beat)}</span></div>
+          <div class="v">${esc(scene.visual)}</div>
+          <div class="note">Camera: ${esc(scene.camera)}</div>
+          ${scene.on_screen_text ? `<div class="overlay">${esc(scene.on_screen_text)}</div>` : ''}
+          <pre><strong>IMAGE:</strong> ${esc(p.image_prompt || '')}\n\n<strong>VIDEO:</strong> ${esc(p.video_prompt || '')}\n\n<strong>CONTINUITY:</strong> ${esc(p.continuity_note || '')}</pre>
+        </div>`;
+      }).join('')}
+    </section>
+
+    <section class="card">
+      <h3>Fact Check + Post Package</h3>
+      ${kv('Fact notes', (pkg.fact_check_notes || []).join('<br>'))}
+      ${kv('Caption', pkg.caption)}
+      ${kv('Hashtags', (pkg.hashtags || []).map(h => '#' + h).join(' '))}
+      ${kv('Production notes', (pkg.production_notes || []).join('<br>'))}
+    </section>
+  `;
+}
+function kv(k, v) { return `<div class="kv"><div class="k">${esc(k)}</div><div class="v">${v || ''}</div></div>`; }
+async function copyJSON(text) { await navigator.clipboard.writeText(text); }
+
+async function checkRouter() {
+  const status = document.getElementById('status');
+  try {
+    const res = await fetch(val('router').replace(/\/+$/, '') + '/health');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const ready = (data.providers || []).filter(p => p.configured && p.id !== 'auto').map(p => p.id).join(', ') || 'none';
+    status.innerHTML = `<span class="ok">Router connected. Providers: ${esc(ready)}</span>`;
+  } catch (e) {
+    status.innerHTML = `<span class="err">Router not reachable. Run npm run start:router first.</span>`;
+  }
+}
+
+async function generate() {
+  const btn = document.getElementById('generateBtn');
+  const status = document.getElementById('status');
+  btn.disabled = true;
+  status.textContent = 'Generating wildlife documentary package...';
+  try {
+    const router = val('router').replace(/\/+$/, '');
+    const res = await fetch(router + '/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        provider: val('provider'),
+        max_tokens: 5500,
+        system: systemPrompt({ visualStyle: val('visualStyle'), imageTool: val('imageTool'), videoTool: val('videoTool') }),
+        messages: [{ role: 'user', content: userMessage() }],
+        imageTool: val('imageTool'),
+        videoTool: val('videoTool'),
+        length: val('length')
+      })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    const raw = (data.content || []).map(b => b.text || '').join('\n');
+    const pkg = JSON.parse(raw.replace(/^```json|```$/g, '').trim());
+    render(pkg);
+    status.innerHTML = '<span class="ok">Generated.</span>';
+  } catch (e) {
+    status.innerHTML = `<span class="err">${esc(e.message || String(e))}</span>`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+document.getElementById('generateBtn').addEventListener('click', generate);
+document.getElementById('checkBtn').addEventListener('click', checkRouter);
+checkRouter();
+</script>
+</body>
+</html>
